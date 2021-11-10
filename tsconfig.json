@@ -1,0 +1,27 @@
+{
+   "compilerOptions": {
+      "lib": [
+         "es5",
+         "es6"
+      ],
+      "target": "ES2020",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "rootDir": "./src",
+      "outDir": "./build",
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "sourceMap": true,
+      "esModuleInterop": true,
+      "strict": true,
+      "strictPropertyInitialization": false,
+      "types": [
+         "reflect-metadata",
+         "jest",
+         "node"
+      ],
+   },
+   "exclude": [
+      "**/*.spec.ts",
+   ]
+}

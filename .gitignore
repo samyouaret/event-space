@@ -1,0 +1,11 @@
+.vscode/
+.env
+node_modules/
+public/build/
+public/storage/
+tmp/
+temp/
+src/tests/*.rest
+/build
+src/resources
+yarn-error.log
