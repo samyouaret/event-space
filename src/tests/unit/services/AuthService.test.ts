@@ -1,11 +1,11 @@
 import faker from 'faker';
-import AuthService from '../../app/services/AuthService';
-import { hash } from '../../helpers/crypto';
+import AuthService from '../../../app/services/AuthService';
+import { hash } from '../../../helpers/crypto';
 
 it('should authenticate a valid user', async () => {
     let password = "Arfc1456_$1";
     let hashedPass = await hash(password);
-    let email = faker.internet.email('farmer', 'birte');
+    let email = faker.internet.email();
     let fakeUser = {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),

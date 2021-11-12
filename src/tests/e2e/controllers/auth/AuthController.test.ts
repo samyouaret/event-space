@@ -1,9 +1,7 @@
 import request from 'supertest'
-import Application from '../../app/Application';
+import Application from '../../../../app/Application';
 import faker from 'faker';
-import { createExpressApp } from '../../factories/ExpressFactory';
-import type { Prisma } from ".prisma/client";
-import RegisterService from '../../app/services/UserService';
+import { createExpressApp } from '../../../../factories/ExpressFactory';
 
 const expressApp = createExpressApp();
 const app = new Application(expressApp);
@@ -19,40 +17,27 @@ afterAll((done) => {
     });
 });
 
-it('should create a new event', async(done) => {
+it('should signup a new user', (done) => {
     const fakeUser = {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
         email: faker.internet.email(),
-        password: "Arfc1456_$1",
-        role: 0
+        password: "Arfc1456_$1"
     }
-    let registerService: RegisterService = new RegisterService(app.getPrisma());
-    let user:any = await registerService.create(fakeUser);
-    let fakeEvent: Prisma.EventCreateInput = {
-        createdAt: new Date(),
-        startDate: new Date(),
-        endDate: faker.date.future(),
-        location: faker.address.country(),
-        timezone: "US/NY",
-        title: faker.datatype.string(30),
-        organizer: "sam",
-        type: "somtype",
-        User: user
-    };
     request.agent(app.getApplicationGateWay().getServer())
-        .post('/api/events')
+        .post('/api/auth/register')
         .set('Content-Type', 'application/json')
-        .send(fakeEvent)
+        .send(fakeUser)
         .expect(201)
         .end(function (err, res) {
             expect(err).toBeNull();
             expect(res.body).toBeDefined();
-            expect(res.body).toHaveProperty('id');
-            app.prisma.event.findFirst({
-                where: { id: res.body.id }
-            }).then((event) => {
-                expect(event).toBeDefined();
+            expect(res.body).toHaveProperty('email');
+            expect(res.body).not.toHaveProperty('password');
+            app.prisma.user.findFirst({
+                where: { email: fakeUser.email }
+            }).then((user) => {
+                expect(user).toBeDefined();
                 done();
             });
         });

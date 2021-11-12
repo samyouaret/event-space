@@ -1,10 +1,10 @@
 import request from 'supertest'
-import Application from '../../../app/Application';
+import Application from '../../../../app/Application';
 import faker from 'faker';
-import AuthCheck from "../../../app/http/middlewares/api/auth-check";
+import AuthCheck from "../../../../app/http/middlewares/api/auth-check";
 import { Request, Response } from 'express'
-import { createExpressApp } from '../../../factories/ExpressFactory';
-import RegisterService from '../../../app/services/UserService';
+import { createExpressApp } from '../../../../factories/ExpressFactory';
+import RegisterService from '../../../../app/services/UserService';
 
 let app: Application;
 

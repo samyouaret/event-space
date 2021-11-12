@@ -1,7 +1,7 @@
 import type { Event } from ".prisma/client";
 import faker from "faker";
 import { v4 } from "uuid";
-import EventService from "../../app/services/EventService";
+import EventService from "../../../app/services/EventService";
 
 test('can create new event', async () => {
     let fakeEvent = {
@@ -19,7 +19,7 @@ test('can create new event', async () => {
     saveMock.mockResolvedValue(Promise.resolve(fakeEvent));
     let mockRepo: any = { save: saveMock };
     let eventService: EventService = new EventService(mockRepo);
-    let createdEvent = await eventService.createEvent(fakeEvent as Event);
+    let createdEvent = await eventService.create(fakeEvent as any);
     expect(createdEvent).toBeDefined();
     expect(createdEvent).toHaveProperty('id');
 });

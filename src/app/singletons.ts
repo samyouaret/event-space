@@ -1,5 +1,6 @@
 import { getPrisma } from "./prisma";
 import VerifyEmailService from "./services/VerifyEmailService";
+import TokenVerifyService from "./services/TokenVerifyService";
 import nodemailer from 'nodemailer';
 import Application from "./Application";
 import MailService from "./services/MailService";
@@ -20,7 +21,8 @@ export default async function singletons(app: Application) {
     });
     let userService: UserService = new UserService(prisma);
     let mailService = new MailService(transporter);
-    let verifyEmailService = new VerifyEmailService(prisma, userService, mailService);
+    let tokenVerifyService = new TokenVerifyService(prisma);
+    let verifyEmailService = new VerifyEmailService(tokenVerifyService, userService, mailService);
 
     return {
         prisma,

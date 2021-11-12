@@ -8,7 +8,7 @@ export default class AuthController {
 
     async login(request: Request, response: Response, next: NextFunction) {
         let event: Event | undefined =
-            await this.eventService.createEvent(request.body);
+            await this.eventService.create(request.body);
         if (event) {
             return response.status(201).json(event);
         }

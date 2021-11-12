@@ -1,10 +1,10 @@
 import { v4 as uuid } from 'uuid';
-import type { Event, PrismaClient } from ".prisma/client";
+import type { Prisma, PrismaClient } from ".prisma/client";
 
 export class EventService {
     constructor(private readonly prisma: PrismaClient) { }
 
-    async createEvent(event: Event) {
+    async create(event: Prisma.EventCreateInput) {
         return this.save({
             ...event,
             id: uuid(),

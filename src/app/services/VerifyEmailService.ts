@@ -1,51 +1,29 @@
-import { PrismaClient } from ".prisma/client";
 import MailService from "./MailService";
 import type UserService from "./UserService";
-import crypto from 'crypto'
+import TokenVerifyService from "./TokenVerifyService";
 
 export default class VerifyEmailService {
 
     constructor(
-        private readonly prisma: PrismaClient,
+        private readonly tokenVerifyService: TokenVerifyService,
         private readonly userService: UserService,
         private readonly mailService: MailService) { }
 
     async verify(token: string) {
-        let record = await this.find(token);
+        let record = await this.tokenVerifyService.isValid(token);
         if (record) {
             await this.userService.update({ verified: true }, { email: record.email });
-            await this.remove(token);
+            await this.tokenVerifyService.remove(token);
             return true;
         }
 
         return false;
     }
-    async create(email: string) {
-        return this.prisma.verifyEmail.create({
-            data: {
-                hash: crypto.randomBytes(50).toString("hex"),
-                timestamp: new Date(),
-                email
-            }
-        });
-    }
-
-    async find(hash: string): Promise<any> {
-        return this.prisma.verifyEmail.findUnique({
-            where:
-                { hash }
-        });
-    }
-
-    async remove(hash: string): Promise<any> {
-        return this.prisma.verifyEmail.delete({
-            where:
-                { hash }
-        });
-    }
-
+    // not your responsibility
     async notifyUser(email: string) {
-        let record = await this.create(email);
+        let expireAt = new Date();
+        expireAt.setMinutes(expireAt.getMinutes() + 30);
+        let record = await this.tokenVerifyService.create(expireAt,email);
         let info = await this.mailService.send({
             to: email,
             from: "samyouaret.me",
