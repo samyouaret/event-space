@@ -4,16 +4,15 @@ import guest from '../../app/http/middlewares/api/guest';
 import userValidator from '../../app/http/middlewares/validators/userValidator';
 import validate from '../../app/http/middlewares/validators/validate';
 import Application from '../../app/Application';
-import RegisterService from '../../app/services/RegisterService';
 import RegisterController from '../../app/http/controllers/auth/RegisterController';
+import AuthService from '../../app/services/AuthService';
 
 export default async function (app: Application): Promise<void> {
-    let userRepository = app.singletons.userRepository;
-    let authService = new app.providers.AuthService(userRepository);
+
+    let authService = new AuthService(app.singletons.userService);
     let authController: AuthController = new AuthController(authService);
-    let registerService: RegisterService = new RegisterService(userRepository);
     let registerController: RegisterController = new RegisterController(
-        registerService,
+        app.singletons.userService,
         app.singletons.verifyEmailService);
     let router: express.Router = express.Router();
     let userRules = userValidator.rules();

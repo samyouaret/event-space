@@ -1,78 +1,57 @@
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+  provider = "postgres"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
-model Diagnostic {
-    id            Int          @id @default(autoincrement())
-    diseaseName   String       @db.Text
-    description   String       @db.Text
-    treatment     String       @db.Text
-    createdAt     DateTime     @default(now()) @db.Timestamp(0)
-    updatedAt     DateTime     @default(now()) @db.Timestamp(0)
-    diseasePostId Int
-    userId        Int
-    DiseasePost   DiseasePost? @relation(fields: [diseasePostId], references: [id])
-    User          User         @relation(fields: [userId], references: [id])
+model Event {
+  id          String   @id @default(uuid())
+  title       String    @db.Text
+  organizer   String    @db.Text
+  location    String    @db.Text
+  type        String    @db.Text
+  createdAt   DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime? @default(now()) @db.Timestamp(0)
+  startDate   DateTime  @default(now()) @db.Timestamp(0)
+  endDate     DateTime  @default(now()) @db.Timestamp(0)
+  timezone    String    @db.Text
+  summary     String?   @db.Text
+  description String?   @db.Text
+  image       String?   @db.Text
+  userId      String
+  User        User      @relation(fields: [userId], references: [id])
 
-    @@index([diseasePostId], name: "DiseasePost_fk")
-    @@index([userId], name: "user_fk")
-}
-
-model DiseasePost {
-    id          Int          @id @default(autoincrement())
-    title       String       @db.Text
-    description String       @db.Text
-    createdAt   DateTime     @default(now()) @db.Timestamp(0)
-    updatedAt   DateTime     @default(now()) @db.Timestamp(0)
-    annotated   Int          @default(0) @db.TinyInt
-    userId      Int
-    User        User         @relation(fields: [userId], references: [id])
-    diagnostic  Diagnostic[]
-    picture     Picture[]
-
-    @@index([userId], name: "user_fk")
-}
-
-model Picture {
-    id            Int         @id @default(autoincrement())
-    url           String      @db.Text
-    diseasePostId Int
-    DiseasePost   DiseasePost @relation(fields: [diseasePostId], references: [id])
-
-    @@index([diseasePostId], name: "DiseasePost_fk")
+  @@index([userId], name: "user_fk")
 }
 
 model User {
-    id          Int           @id @default(autoincrement())
-    firstName   String        @db.VarChar(255)
-    lastName    String        @db.VarChar(255)
-    email       String        @unique @db.VarChar(255)
-    password    String        @db.VarChar(255)
-    role        Int
-    verified    Boolean       @default(false)
-    Diagnostic  Diagnostic[]
-    DiseasePost DiseasePost[]
+  id        String  @id @default(uuid())
+  firstName String  @db.VarChar(255)
+  lastName  String  @db.VarChar(255)
+  email     String  @unique @db.VarChar(255)
+  password  String  @db.VarChar(255)
+  role      Int
+  verified  Boolean @default(false)
 
-    @@index([email], name: "email_index")
+  events Event[]
+  @@index([email], name: "email_index")
 }
 
 model VerifyEmail {
-    hash      String   @unique
-    timestamp DateTime
-    email     String
+  hash      String   @unique
+  timestamp DateTime
+  email     String
 
-    @@index([hash], name: "verifyEmail_hash_index")
+  @@index([hash], name: "verifyEmail_hash_index")
 }
 
 model ResetPassword {
-    hash      String   @unique
-    timestamp DateTime
-    email     String
+  hash      String   @unique
+  timestamp DateTime
+  email     String
 
-    @@index([hash], name: "resetPassword_hash_index")
+  @@index([hash], name: "resetPassword_hash_index")
 }

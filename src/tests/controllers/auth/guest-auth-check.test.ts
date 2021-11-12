@@ -1,8 +1,8 @@
 import request from 'supertest'
-import Application from '../../app/Application';
-import Guest from "../../app/http/middlewares/api/guest";
+import Application from '../../../app/Application';
+import Guest from "../../../app/http/middlewares/api/guest";
 import { Request, Response } from 'express'
-import { createExpressApp } from '../../factories/ExpressFactory';
+import { createExpressApp } from '../../../factories/ExpressFactory';
 
 let app: Application;
 

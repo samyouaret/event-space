@@ -14,8 +14,8 @@ it('should authenticate a valid user', async () => {
     };
     let findByEmailMock = jest.fn().mockImplementation(() => { });
     findByEmailMock.mockResolvedValue(Promise.resolve(fakeUser));
-    let mockRepository: any = { findByEmail: findByEmailMock };
-    let authService = new AuthService(mockRepository);
+    let userServiceMock: any = { findByEmail: findByEmailMock };
+    let authService = new AuthService(userServiceMock);
 
     let token = await authService.authenticate(email, password);
 
@@ -38,8 +38,8 @@ it('should fail authenticate a user with invalid password', async () => {
     };
     let findByEmailMock = jest.fn().mockImplementation(() => { });
     findByEmailMock.mockResolvedValue(Promise.resolve(fakeUser));
-    let mockRepository: any = { findByEmail: findByEmailMock };
-    let authService = new AuthService(mockRepository);
+    let userServiceMock: any = { findByEmail: findByEmailMock };
+    let authService = new AuthService(userServiceMock);
 
     let token = await authService.authenticate(email, "some-other-pass");
 
@@ -54,8 +54,8 @@ it('should fail authenticate unfound user', async () => {
 
     let findByEmailMock = jest.fn().mockImplementation(() => { });
     findByEmailMock.mockResolvedValue(Promise.resolve());
-    let mockRepository: any = { findByEmail: findByEmailMock };
-    let authService = new AuthService(mockRepository);
+    let userServiceMock: any = { findByEmail: findByEmailMock };
+    let authService = new AuthService(userServiceMock);
 
     let token = await authService.authenticate(email, password);
 

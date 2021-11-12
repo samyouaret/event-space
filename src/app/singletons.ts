@@ -1,10 +1,9 @@
 import { getPrisma } from "./prisma";
-import UserRepository from "./repositories/UserRepository";
 import VerifyEmailService from "./services/VerifyEmailService";
 import nodemailer from 'nodemailer';
 import Application from "./Application";
-import VerifyEmailRepository from "./repositories/VerifyEmailRepository";
-
+import MailService from "./services/MailService";
+import { UserService } from "./services/UserService";
 
 export default async function singletons(app: Application) {
     const prisma = getPrisma();
@@ -19,18 +18,14 @@ export default async function singletons(app: Application) {
             pass: testAccount.pass, // generated ethereal password
         },
     });
-    let mailService = new app.providers.MailService(transporter);
-    let userRepository = new UserRepository(prisma);
-    let verifyEmailRepository = new VerifyEmailRepository(prisma);
-    let verifyEmailService = new VerifyEmailService(
-        verifyEmailRepository,
-        userRepository, mailService);
+    let userService: UserService = new UserService(prisma);
+    let mailService = new MailService(transporter);
+    let verifyEmailService = new VerifyEmailService(prisma, userService, mailService);
 
     return {
         prisma,
         mailService,
         verifyEmailService,
-        userRepository,
-        verifyEmailRepository,
+        userService,
     };
 };

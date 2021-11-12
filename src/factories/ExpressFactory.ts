@@ -13,6 +13,7 @@ export function createExpressApp() {
             helmet: true,
             parseCookie: false,
             urlencoded: true,
+            openApiDoc: true,
             port: pathHelper.env('APP_PORT'),
             // view_path: pathHelper.root_path(pathHelper.env('VIEWS_PATH')) || pathHelper.view_path(),
             // view_engine: pathHelper.env('VIEWS_ENGINE'),

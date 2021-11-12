@@ -1,7 +1,8 @@
+import { PrismaClient } from ".prisma/client";
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import { env } from "../../helpers/pathHelper";
-import UserRepository from "../repositories/UserRepository";
+import UserService from "./UserService";
 
 export interface Token {
     token: string;
@@ -9,10 +10,10 @@ export interface Token {
 
 export class AuthService {
 
-    constructor(private readonly repository: UserRepository) {}
+    constructor(private readonly userService:UserService) {}
 
     async authenticate(email: string, password: string): Promise<Token | undefined> {
-        let user = await this.repository.findByEmail(email);
+        let user = await this.userService.findByEmail(email);
         if (!user) {
             return;
         }

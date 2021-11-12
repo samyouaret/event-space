@@ -1,29 +1,47 @@
-import UserRepository from "../repositories/UserRepository";
-import ResetPasswordRepository from "../repositories/ResetPasswordRepository";
 import MailService from "./MailService";
-import { hash } from '../../helpers/crypto'
+import { PrismaClient } from ".prisma/client";
+import UserService from "./UserService";
+import crypto from 'crypto'
 
 export default class ResetPasswordService {
 
-    constructor(
-        private readonly resetPasswordRepository: ResetPasswordRepository,
-        private readonly userRepository: UserRepository,
+    constructor(private readonly prisma: PrismaClient,
+        private readonly userService: UserService,
         private readonly mailService: MailService) { }
 
-    async reset(token: string, password: string) {
-        let record = await this.resetPasswordRepository.find(token);
+    async reset(hash: string, password: string) {
+        let record = await this.prisma.resetPassword.findUnique({
+            where:
+                { hash }
+        });
         if (record) {
-            password = await hash(password);
-            await this.userRepository.update({ password }, { email: record.email });
-            await this.resetPasswordRepository.remove(token);
+            await this.userService.updatePassword(record.email, password);
+            await this.remove(hash);
             return true;
         }
 
         return false;
     }
 
+    async create(email: string) {
+        return this.prisma.resetPassword.create({
+            data: {
+                hash: crypto.randomBytes(50).toString("hex"),
+                timestamp: new Date(),
+                email
+            }
+        });
+    }
+
+    async remove(hash: string): Promise<any> {
+        return this.prisma.resetPassword.delete({
+            where:
+                { hash }
+        });
+    }
+
     async notifyUser(email: string) {
-        let record = await this.resetPasswordRepository.create(email)
+        let record = await this.create(email)
         let info = await this.mailService.send({
             to: email,
             from: "samyouaret.me",

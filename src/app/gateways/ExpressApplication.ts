@@ -1,8 +1,5 @@
-import * as pathHelper from '../../helpers/pathHelper';
 import express from 'express';
 import EventEmitter from 'events';
-import * as fs from 'fs/promises';
-import * as path from "path";
 import routes from '../routes'
 import { ApplicationGatewayContract } from './ApplicationGatewayContract';
 import Application from '../Application';
@@ -16,6 +13,7 @@ export interface ExpressConfig {
     helmet?: boolean,
     parseCookie?: boolean,
     view_path?: string,
+    openApiDoc?:boolean,
     view_engine?: string,
     urlencoded?: boolean,
     static_path?: string,
@@ -63,6 +61,11 @@ export default class ExpressApplication extends EventEmitter implements Applicat
             const csrf = await import("../http/middlewares/common/csrf");
             const csrfProtection = csrf.default();
             this.server.use(csrfProtection);
+        }
+        if (this.config.openApiDoc) {
+            const swaggerUi = await import('swagger-ui-express');
+            const { apiDoc } = await import('../http/open-api-docs/api');
+            this.server.use('/api-docs', swaggerUi.serve, swaggerUi.setup(apiDoc));
         }
         this.emit('beforeRoutesLoaded');
         await this.loadRoutes(application);

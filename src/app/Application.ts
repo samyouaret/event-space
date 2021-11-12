@@ -2,7 +2,6 @@ import * as pathHelper from '../helpers/pathHelper';
 import EventEmitter from 'events';
 import { PrismaClient } from '@prisma/client'
 import singletons from './singletons'
-import providers from './providers'
 import { ApplicationGatewayContract } from './gateways/ApplicationGatewayContract';
 
 export default class Application extends EventEmitter {
@@ -10,7 +9,6 @@ export default class Application extends EventEmitter {
     appGateway: ApplicationGatewayContract;
     prisma: PrismaClient;
     singletons: any;
-    providers: any;
     APP_ENV: any;
 
     constructor(appGateway: ApplicationGatewayContract) {
@@ -42,7 +40,6 @@ export default class Application extends EventEmitter {
     }
 
     async init() {
-        this.providers = providers;
         if (typeof singletons === 'function') {
             this.singletons = await singletons(this);
         } else {

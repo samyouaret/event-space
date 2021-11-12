@@ -1,11 +1,10 @@
 import request from 'supertest'
-import Application from '../../app/Application';
+import Application from '../../../app/Application';
 import faker from 'faker';
-import AuthCheck from "../../app/http/middlewares/api/auth-check";
+import AuthCheck from "../../../app/http/middlewares/api/auth-check";
 import { Request, Response } from 'express'
-import { createExpressApp } from '../../factories/ExpressFactory';
-import RegisterService from '../../app/services/RegisterService';
-import UserRepository from '../../app/repositories/UserRepository';
+import { createExpressApp } from '../../../factories/ExpressFactory';
+import RegisterService from '../../../app/services/UserService';
 
 let app: Application;
 
@@ -28,8 +27,8 @@ beforeAll(async () => {
 
 afterAll((done) => {
     app.getPrisma().$queryRaw`DELETE 
-    FROM User 
-    WHERE id > 0;`.then(() => {
+    FROM "User" 
+    WHERE id IS NOT NULL;;`.then(() => {
         app.getPrisma().$disconnect().then(done);
     });
 });
@@ -39,7 +38,6 @@ afterEach(() => {
 });
 
 it('should pass auth middlware with valid token', (done) => {
-    let userRepository = new UserRepository(app.getPrisma());
     const fakeUser = {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -47,8 +45,8 @@ it('should pass auth middlware with valid token', (done) => {
         password: "Arfc1456_$1",
         role: 0
     }
-    let registerService: RegisterService = new RegisterService(userRepository);
-    registerService.register(fakeUser).then(user => {
+    let registerService: RegisterService = new RegisterService(app.getPrisma());
+    registerService.create(fakeUser).then(user => {
         expect(user?.email).toBe(fakeUser.email);
         done();
     });
