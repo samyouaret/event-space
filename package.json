@@ -49,7 +49,7 @@
    "scripts": {
       "start": "ts-node src/index.ts",
       "build": "tsc",
-      "test": "jest -- ./src/tests --runInBand --detectOpenHandles"
+      "test": "jest -- ./src/tests/services/TokenVerifyService.test.ts --runInBand --detectOpenHandles"
    },
    "prisma": {
       "schema": "./src/database/prisma/schema.prisma"

@@ -8,7 +8,7 @@ generator client {
 }
 
 model Event {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String    @db.Text
   organizer   String    @db.Text
   location    String    @db.Text
@@ -38,6 +38,14 @@ model User {
 
   events Event[]
   @@index([email], name: "email_index")
+}
+
+model TokenVerify {
+  token     String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  expireAt  DateTime
+
+  @@index([token], name: "token_index")
 }
 
 model VerifyEmail {
