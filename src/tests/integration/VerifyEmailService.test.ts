@@ -53,7 +53,7 @@ describe('Testing VerifyEmail Service', () => {
         let { info, token } = await verifyEmailService.notifyUser(email);
         expect(info).toHaveProperty('messageId');
         expect(info.response).toContain('250 Accepted');
-        let validToken = await tokenVerifyService.isValid(token.token);
+        let validToken = await tokenVerifyService.isValid(token.token, verifyEmailService.reason);
         expect(validToken).toBeTruthy();
     });
 
@@ -71,8 +71,8 @@ describe('Testing VerifyEmail Service', () => {
         };
         await userService.create(newUser);
         let tokenVerifyService = new TokenVerifyService(prisma);
-
-        let newToken = await tokenVerifyService.create(expireAt, email);
+        let reason = "email_verification";
+        let newToken = await tokenVerifyService.create(expireAt, email, reason);
         let dummyMailService = {};
         let verifyEmailService = new VerifyEmailService(
             tokenVerifyService,

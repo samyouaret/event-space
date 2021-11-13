@@ -3,14 +3,17 @@ import type UserService from "./UserService";
 import TokenVerifyService from "./TokenVerifyService";
 
 export default class VerifyEmailService {
+    reason: string;
 
     constructor(
         private readonly tokenVerifyService: TokenVerifyService,
         private readonly userService: UserService,
-        private readonly mailService: MailService) { }
+        private readonly mailService: MailService) {
+        this.reason = "email_verification";
+    }
 
     async verify(token: string) {
-        let record = await this.tokenVerifyService.isValid(token);
+        let record = await this.tokenVerifyService.isValid(token, this.reason);
         if (record) {
             await this.userService.update({ verified: true }, { email: record.email });
             await this.tokenVerifyService.remove(token);
@@ -23,7 +26,7 @@ export default class VerifyEmailService {
     async notifyUser(email: string) {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let token = await this.tokenVerifyService.create(expireAt, email);
+        let token = await this.tokenVerifyService.create(expireAt, email, this.reason);
         let info = await this.mailService.send({
             to: email,
             from: "samyouaret.me",

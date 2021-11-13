@@ -44,8 +44,8 @@ model TokenVerify {
   token     String   @id @default(uuid())
   email     String   @db.VarChar(255)
   createdAt DateTime @default(now())
-  expireAt  DateTime
-
+  expireAt  DateTime  
+  reason    String   @db.VarChar(255)
   @@index([token], name: "token_index")
 }
 
