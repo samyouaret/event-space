@@ -1,56 +1,40 @@
 import MailService from "./MailService";
-import { PrismaClient } from ".prisma/client";
 import UserService from "./UserService";
-import crypto from 'crypto'
+import TokenVerifyService from "./TokenVerifyService";
 
 export default class ResetPasswordService {
+    reason: string;
 
-    constructor(private readonly prisma: PrismaClient,
+    constructor(
+        private readonly tokenVerifyService: TokenVerifyService,
         private readonly userService: UserService,
-        private readonly mailService: MailService) { }
-
-    async reset(hash: string, password: string) {
-        let record = await this.prisma.resetPassword.findUnique({
-            where:
-                { hash }
-        });
-        if (record) {
-            await this.userService.updatePassword(record.email, password);
-            await this.remove(hash);
-            return true;
-        }
-
-        return false;
+        private readonly mailService: MailService) {
+        this.reason = "reset_password";
     }
 
-    async create(email: string) {
-        return this.prisma.resetPassword.create({
-            data: {
-                hash: crypto.randomBytes(50).toString("hex"),
-                timestamp: new Date(),
-                email
+    async reset(token: string, password: string) {
+        return this.tokenVerifyService.verify({
+            token,
+            reason: this.reason,
+            execute: async (record) => {
+                await this.userService.updatePassword(record.email, password);
             }
-        });
-    }
-
-    async remove(hash: string): Promise<any> {
-        return this.prisma.resetPassword.delete({
-            where:
-                { hash }
-        });
+        })
     }
 
     async notifyUser(email: string) {
-        let record = await this.create(email)
+        let expireAt = new Date();
+        expireAt.setMinutes(expireAt.getMinutes() + 30);
+        let token = await this.tokenVerifyService.create(expireAt, email, this.reason);
         let info = await this.mailService.send({
             to: email,
             from: "samyouaret.me",
             subject: "Password reset Request",
             text: "follow the link to reset your password",
-            html: `<h2>reset your password ${record.hash}<h2>`,
+            html: `<h2>reset your password ${token.token}<h2>`,
         });
 
-        return info;
+        return { info, token };
     }
 
 }

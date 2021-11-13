@@ -22,12 +22,9 @@ beforeAll(async () => {
     await app.init();
 });
 
-afterAll((done) => {
-    app.getPrisma().$queryRaw`DELETE 
-    FROM "Event" 
-    WHERE id IS NOT NULL;`.then(() => {
-        app.getPrisma().$disconnect().then(done);
-    });
+
+afterAll(async () => {
+    await app.getPrisma().$disconnect();
 });
 
 it('should create a new event', async (done) => {

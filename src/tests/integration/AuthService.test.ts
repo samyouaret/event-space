@@ -11,12 +11,11 @@ beforeAll(async () => {
     await prisma.$connect();
 });
 
-afterAll((done) => {
-    prisma.$queryRaw`DELETE 
-    FROM "User" 
-    WHERE id IS NOT NULL;`.then(() => {
-        prisma.$disconnect().then(done);
-    });
+afterAll(async () => {
+    // await prisma.$queryRaw`DELETE 
+    // FROM "User"
+    // WHERE id IS NULL;`;
+    await prisma.$disconnect();
 });
 
 it('should authenticate a valid user', async () => {

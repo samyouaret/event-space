@@ -26,7 +26,8 @@ export class UserService {
     async updatePassword(email: string, password: string): Promise<any> {
         password = await hash(password);
         return this.prisma.user.update({
-            data: password, where: {
+            data: { password },
+            where: {
                 email
             }
         });

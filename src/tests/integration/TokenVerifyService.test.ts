@@ -11,14 +11,9 @@ afterAll(async () => {
     await prisma.$disconnect();
 });
 
-afterAll((done) => {
-    prisma.$queryRaw`DELETE 
-    FROM "TokenVerify" 
-    WHERE token IS NOT NULL;`.then(() => {
-        prisma.$disconnect().then(done);
-    });
+afterAll(async () => {
+    await prisma.$disconnect();
 });
-
 
 describe('Testing TokenVerifyService', () => {
 
@@ -52,8 +47,8 @@ describe('Testing TokenVerifyService', () => {
         await new Promise(resolve => setTimeout(resolve, 6000));
         isValid = await tokenVerifyService.isValid(token2.token, reason);
         expect(isValid).toBeFalsy();
-        let unknown_reasonn = "another-reason";
-        isValid = await tokenVerifyService.isValid(token.token, unknown_reasonn);
+        let unknown_reason = "another-reason";
+        isValid = await tokenVerifyService.isValid(token.token, unknown_reason);
         expect(isValid).toBeFalsy();
     });
 

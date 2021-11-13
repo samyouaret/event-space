@@ -49,7 +49,7 @@
    "scripts": {
       "start": "ts-node src/index.ts",
       "build": "tsc",
-      "test": "jest -- ./src/tests --runInBand --detectOpenHandles"
+      "test": "prisma migrate reset --force --preview-feature && prisma migrate deploy --preview-feature && jest -- ./src/tests --runInBand --detectOpenHandles"
    },
    "prisma": {
       "schema": "./src/database/prisma/schema.prisma"

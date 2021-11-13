@@ -1,4 +1,4 @@
-import VerifyEmailService from '../../app/services/VerifyEmailService';
+import ResetPasswordService from '../../app/services/ResetPasswordService';
 import UserService from '../../app/services/UserService';
 import { getPrisma } from '../../app/prisma';
 import TokenVerifyService from '../../app/services/TokenVerifyService';
@@ -20,7 +20,7 @@ afterAll(async () => {
     await prisma.$disconnect();
 });
 
-describe('Testing VerifyEmail Service', () => {
+describe('Testing resetPassword Service', () => {
 
     it('should notify user with token', async () => {
         let expireAt = new Date();
@@ -38,19 +38,19 @@ describe('Testing VerifyEmail Service', () => {
         let tokenVerifyService = new TokenVerifyService(prisma);
 
         let mailService = new MailService(mailer);
-        let verifyEmailService = new VerifyEmailService(
+        let resetPasswordService = new ResetPasswordService(
             tokenVerifyService,
             userService,
             mailService);
 
-        let { info, token } = await verifyEmailService.notifyUser(email);
+        let { info, token } = await resetPasswordService.notifyUser(email);
         expect(info).toHaveProperty('messageId');
         expect(info.response).toContain('250 Accepted');
-        let validToken = await tokenVerifyService.isValid(token.token, verifyEmailService.reason);
+        let validToken = await tokenVerifyService.isValid(token.token, resetPasswordService.reason);
         expect(validToken).toBeTruthy();
     });
 
-    it('should verify user if token is valid', async () => {
+    it('should reset password', async () => {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
         let email = faker.internet.email();
@@ -64,18 +64,19 @@ describe('Testing VerifyEmail Service', () => {
         };
         await userService.create(newUser);
         let tokenVerifyService = new TokenVerifyService(prisma);
-        let reason = "email_verification";
+        let reason = "reset_password";
         let newToken = await tokenVerifyService.create(expireAt, email, reason);
         let dummyMailService = {};
-        let verifyEmailService = new VerifyEmailService(
+        let resetPasswordService = new ResetPasswordService(
             tokenVerifyService,
             userService,
             dummyMailService as any);
-
-        let verified = await verifyEmailService.verify(newToken.token);
-        expect(verified).toBeTruthy();
-        let verfiedUser = await userService.findByEmail(email);
-        expect(verfiedUser.verified).toBeTruthy();
+        let newPassword = faker.random.alphaNumeric();
+        let UserBeforeReset = await userService.findByEmail(email);
+        let reset = await resetPasswordService.reset(newToken.token, newPassword);
+        expect(reset).toBeTruthy();
+        let UserAfterReset = await userService.findByEmail(email);
+        expect(UserBeforeReset.password).not.toEqual(UserAfterReset.password);
     });
 
 });

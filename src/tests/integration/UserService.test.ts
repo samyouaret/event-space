@@ -4,20 +4,13 @@ import { Prisma } from ".prisma/client";
 import { getPrisma } from '../../app/prisma';
 
 let prisma = getPrisma();
+
 beforeAll(async () => {
     await prisma.$connect();
 });
 
 afterAll(async () => {
     await prisma.$disconnect();
-});
-
-afterAll((done) => {
-    prisma.$queryRaw`DELETE 
-    FROM "User" 
-    WHERE id IS NOT NULL;`.then(() => {
-        prisma.$disconnect().then(done);
-    });
 });
 
 it('should create a new a User', async () => {
@@ -34,8 +27,6 @@ it('should create a new a User', async () => {
     let userService = new UserService(prisma);
 
     let user = await userService.create(newUser);
-    console.log(user);
-    
     expect(user).toBeDefined();
     expect(user.id).toBeDefined();
     expect(user.password).toBeUndefined();

@@ -31,7 +31,7 @@ export default class TokenVerifyService {
         if (!record) {
             return false;
         }
-        if (record.reason != reason) {
+        if (record.reason !== reason) {
             return false;
         }
         if (record.expireAt < new Date()) {

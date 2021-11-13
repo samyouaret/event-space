@@ -9,12 +9,9 @@ beforeAll(async () => {
     await app.init();
 });
 
-afterAll((done) => {
-    app.getPrisma().$queryRaw`DELETE 
-    FROM "User" 
-    WHERE id IS NOT NULL;`.then(() => {
-        app.getPrisma().$disconnect().then(done);
-    });
+
+afterAll(async () => {
+    await app.getPrisma().$disconnect();
 });
 
 it('should signup a new user', (done) => {
