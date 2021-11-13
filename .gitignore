@@ -9,3 +9,4 @@ src/tests/*.rest
 /build
 src/resources
 yarn-error.log
+/coverage
