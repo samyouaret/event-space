@@ -23,16 +23,16 @@ export default class VerifyEmailService {
     async notifyUser(email: string) {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let record = await this.tokenVerifyService.create(expireAt,email);
+        let token = await this.tokenVerifyService.create(expireAt, email);
         let info = await this.mailService.send({
             to: email,
             from: "samyouaret.me",
             subject: "Please confirm your email",
             text: "One step to start.",
-            html: `<h2>please confirm your email ${record}<h2>`,
+            html: `<h2>please confirm your email ${token.token}<h2>`,
         });
 
-        return info;
+        return { info, token };
     }
 
 }
