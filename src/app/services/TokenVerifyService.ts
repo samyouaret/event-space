@@ -41,4 +41,20 @@ export default class TokenVerifyService {
         return record;
     }
 
+    /**
+     * Verify the token with provided reason, executes a success callback 
+     *  and remove token from database (return true), othewise it return false.
+     * @returns boolean
+     */
+    async verify({ token, execute, reason }: { token: string, execute: (record: TokenVerify) => Promise<void>, reason: string }): Promise<Boolean> {
+        let record = await this.isValid(token, reason);
+        if (record) {
+            await execute(record);
+            await this.remove(token);
+            return true;
+        }
+
+        return false;
+    }
+
 }

@@ -1,3 +1,4 @@
+import { TokenVerify } from '.prisma/client';
 import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import TokenVerifyService from '../../../app/services/TokenVerifyService';
@@ -115,6 +116,40 @@ describe('Testing TokenVerifyService', () => {
         let token = await tokenVerifyService.remove(tokenId);
         expect(removeMock).toHaveBeenCalled();
         expect(token).toEqual(newToken);
+    });
+
+    it('should verify token', async () => {
+        let expireAt = new Date();
+        expireAt.setMinutes(expireAt.getMinutes() + 30);
+        let email = faker.internet.email();
+        let tokenId: string = uuid();
+        let newToken: any = {
+            token: tokenId,
+            createdAt: new Date(),
+            email,
+            reason: "testing_purpose",
+            expireAt,
+        };
+
+        let isValidMock = jest.fn().mockImplementation(() => { });
+        isValidMock.mockResolvedValue(Promise.resolve(newToken));
+        let removeMock = jest.fn().mockImplementation(() => { });
+        removeMock.mockResolvedValue(Promise.resolve(newToken));
+        let prismaMock = {};
+        let reason = "testing_purpose";
+        let tokenVerifyService = new TokenVerifyService(prismaMock as any);
+        tokenVerifyService.remove = removeMock;
+        tokenVerifyService.isValid = isValidMock
+        let executeMock = jest.fn().mockImplementation(() => { });
+        let verified = await tokenVerifyService.verify({
+            token: tokenId,
+            reason,
+            execute: executeMock,
+        });
+        expect(isValidMock).toHaveBeenCalled();
+        expect(executeMock).toHaveBeenCalled();
+        expect(removeMock).toHaveBeenCalled();
+        expect(verified).toBeTruthy();
     });
 
 });

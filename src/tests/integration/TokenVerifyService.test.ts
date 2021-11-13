@@ -69,4 +69,24 @@ describe('Testing TokenVerifyService', () => {
         expect(exists).toBeNull();
     });
 
+    it('should verify token', async () => {
+        let expireAt = new Date();
+        expireAt.setMinutes(expireAt.getMinutes() + 30);
+        let email = faker.internet.email();
+        let reason = "testing_purpose";
+        let tokenVerifyService = new TokenVerifyService(prisma);
+        let token = await tokenVerifyService.create(expireAt, email, reason);
+
+        let executeMock = jest.fn().mockImplementation(() => { });
+        let verified = await tokenVerifyService.verify({
+            token: token.token,
+            reason,
+            execute: executeMock,
+        });
+        expect(executeMock).toHaveBeenCalled();
+        expect(verified).toBeTruthy();
+        let exists = await prisma.tokenVerify.findUnique({ where: { token: token.token } });
+        expect(exists).toBeNull();
+    });
+
 });

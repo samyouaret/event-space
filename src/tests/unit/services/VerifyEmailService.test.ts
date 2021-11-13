@@ -46,13 +46,10 @@ describe('Testing VerifyEmail Service', () => {
             createdAt: new Date(),
             expireAt,
         };
-        let isValidMock = jest.fn().mockImplementation(() => { });
-        isValidMock.mockResolvedValue(Promise.resolve(newToken));
+        let verifyMock = jest.fn().mockImplementation(() => { });
+        verifyMock.mockResolvedValue(Promise.resolve(true));
         let tokenVerifyService = {
-            isValid: isValidMock,
-            remove: async function (token: string) {
-                return true;
-            },
+            verify: verifyMock
         };
         let updateMock = jest.fn().mockImplementation(() => { });
         updateMock.mockResolvedValue(Promise.resolve(newToken));
@@ -66,7 +63,7 @@ describe('Testing VerifyEmail Service', () => {
             dummyMailService as any);
 
         let verified = await verifyEmailService.verify(newToken.token);
-        expect(isValidMock).toHaveBeenCalled();
+        expect(verifyMock).toHaveBeenCalled();
         expect(verified).toBeTruthy();
     });
 

@@ -12,15 +12,12 @@ export default class VerifyEmailService {
         this.reason = "email_verification";
     }
 
-    async verify(token: string) {
-        let record = await this.tokenVerifyService.isValid(token, this.reason);
-        if (record) {
-            await this.userService.update({ verified: true }, { email: record.email });
-            await this.tokenVerifyService.remove(token);
-            return true;
-        }
-
-        return false;
+    async verify(token: string): Promise<Boolean> {
+        return this.tokenVerifyService.verify({
+            token, reason: this.reason, execute: async (record) => {
+                await this.userService.update({ verified: true }, { email: record.email });
+            }
+        })
     }
     // not your responsibility
     async notifyUser(email: string) {
