@@ -1,4 +1,3 @@
-import type { Event } from ".prisma/client";
 import faker from "faker";
 import { v4 } from "uuid";
 import EventService from "../../../app/services/EventService";

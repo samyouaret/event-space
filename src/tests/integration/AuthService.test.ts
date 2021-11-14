@@ -12,9 +12,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    // await prisma.$queryRaw`DELETE 
-    // FROM "User"
-    // WHERE id IS NULL;`;
     await prisma.$disconnect();
 });
 

@@ -33,21 +33,25 @@ export default class Application extends EventEmitter {
     }
 
     async start() {
-        console.log("init App ...");
+        console.log("Init App ...");
         await this.init();
-        console.log("starting App ...");
+        console.log("Starting App ...");
         return this.appGateway.start();
     }
 
     async init() {
+        await this.loadSingletons();
+        this.prisma = this.singletons.prisma;
+        await this.prisma.$connect();
+        await this.appGateway.init(this);
+    }
+
+    private async loadSingletons() {
         if (typeof singletons === 'function') {
             this.singletons = await singletons(this);
         } else {
             this.singletons = singletons;
         }
-        this.prisma = this.singletons.prisma;
-        await this.prisma.$connect();
-        await this.appGateway.init(this);
     }
 
     getPrisma(): PrismaClient {

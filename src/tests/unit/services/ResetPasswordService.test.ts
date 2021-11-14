@@ -2,16 +2,22 @@ import { v4 as uuid } from 'uuid';
 import faker from 'faker';
 import ResetPasswordService from '../../../app/services/ResetPasswordService';
 
+function generateFakeToken(AfterInMinutes: number) {
+    let expireAt = new Date();
+    expireAt.setMinutes(expireAt.getMinutes() + AfterInMinutes);
+    return {
+        token: uuid(),
+        createdAt: new Date(),
+        email: faker.internet.email(),
+        reason: "testing_purpose",
+        expireAt,
+    };
+}
+
 describe('Testing resetPassword Service', () => {
 
     it('should notify user with token', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let newToken: any = {
-            token: uuid(),
-            createdAt: new Date(),
-            expireAt,
-        };
+        let newToken = generateFakeToken(30);
         let createMock = jest.fn().mockImplementation(() => { });
         createMock.mockResolvedValue(Promise.resolve(newToken));
         let tokenVerifyService = {
@@ -39,13 +45,7 @@ describe('Testing resetPassword Service', () => {
     });
 
     it('should verify user if token is valid', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let newToken: any = {
-            token: uuid(),
-            createdAt: new Date(),
-            expireAt,
-        };
+        let newToken = generateFakeToken(30);
         let verifyMock = jest.fn().mockImplementation(() => { });
         verifyMock.mockResolvedValue(Promise.resolve(true));
         let tokenVerifyService = {
@@ -62,7 +62,7 @@ describe('Testing resetPassword Service', () => {
             userService as any,
             dummyMailService as any);
         let password = "somePass";
-        let verified = await resetPasswordService.reset(newToken.token,password);
+        let verified = await resetPasswordService.reset(newToken.token, password);
         expect(verifyMock).toHaveBeenCalled();
         expect(verified).toBeTruthy();
     });

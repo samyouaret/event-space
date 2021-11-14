@@ -3,17 +3,17 @@ import UserService from '../../../app/services/UserService';
 import { User } from ".prisma/client";
 import { v4 as uuid } from 'uuid';
 
+let fakeUser: User = {
+    id: uuid(),
+    firstName: faker.name.firstName(),
+    lastName: faker.name.lastName(),
+    email: faker.internet.email(),
+    password: faker.random.alphaNumeric(),
+    role: 0,
+    verified: false,
+};
+
 it('should create a new a User', async () => {
-    let email = faker.internet.email();
-    let fakeUser: User = {
-        id: uuid(),
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        email,
-        password: faker.random.alphaNumeric(),
-        role: 0,
-        verified: false,
-    };
     let findFirst = jest.fn().mockImplementation(() => { });
     findFirst.mockResolvedValue(Promise.resolve(undefined));
     let createMock = jest.fn().mockImplementation(() => { });
@@ -38,16 +38,6 @@ it('should create a new a User', async () => {
 });
 
 it('should fail to register if email is taken', async () => {
-    let email = faker.internet.email();
-    let fakeUser: User = {
-        id: uuid(),
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        email,
-        password: faker.random.alphaNumeric(),
-        role: 0,
-        verified: false,
-    };
     let findFirst = jest.fn().mockImplementation(() => { });
     findFirst.mockResolvedValue(Promise.resolve(fakeUser));
     let prismaMock = {

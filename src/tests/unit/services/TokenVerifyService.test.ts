@@ -3,18 +3,23 @@ import faker from 'faker';
 import { v4 as uuid } from 'uuid';
 import TokenVerifyService from '../../../app/services/TokenVerifyService';
 
+function generateFakeToken(AfterInMinutes: number) {
+    let expireAt = new Date();
+    expireAt.setMinutes(expireAt.getMinutes() + AfterInMinutes);
+    return {
+        token: uuid(),
+        createdAt: new Date(),
+        email: faker.internet.email(),
+        reason: "testing_purpose",
+        expireAt,
+    };
+}
+
 describe('Testing TokenVerifyService', () => {
 
     it('should generate new token', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let newToken: any = {
-            token: uuid(),
-            createdAt: new Date(),
-            email,
-            expireAt,
-        };
+        let newToken = generateFakeToken(30);
+        let { email, expireAt } = newToken;
         let createMock = jest.fn().mockImplementation(() => { });
         createMock.mockResolvedValue(Promise.resolve(newToken));
         let prismaMock = {
@@ -31,15 +36,8 @@ describe('Testing TokenVerifyService', () => {
     });
 
     it('should Allow only for a valid future expire date', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() - 30);
-        let email = faker.internet.email();
-        let newToken: any = {
-            token: uuid(),
-            createdAt: new Date(),
-            email,
-            expireAt,
-        };
+        let newToken = generateFakeToken(-30);
+        let { email, expireAt } = newToken;
         let createMock = jest.fn().mockImplementation(() => { });
         createMock.mockResolvedValue(Promise.resolve(newToken));
         let prismaMock = {
@@ -60,18 +58,8 @@ describe('Testing TokenVerifyService', () => {
     });
 
     it('check if a token is valid', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let tokenId: string = uuid();
-        let newToken: any = {
-            token: tokenId,
-            createdAt: new Date(),
-            email,
-            reason: "testing_purpose",
-            expireAt,
-        };
-
+        let newToken = generateFakeToken(30);
+        let { expireAt, token: tokenId } = newToken;
         let findMock = jest.fn().mockImplementation(() => { });
         findMock.mockResolvedValue(Promise.resolve(newToken));
         let prismaMock = {
@@ -93,17 +81,8 @@ describe('Testing TokenVerifyService', () => {
     });
 
     it('should delete a token', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let tokenId: string = uuid();
-        let newToken: any = {
-            token: tokenId,
-            createdAt: new Date(),
-            email,
-            expireAt,
-        };
-
+        let newToken = generateFakeToken(30);
+        let { token: tokenId } = newToken;
         let removeMock = jest.fn().mockImplementation(() => { });
         removeMock.mockResolvedValue(Promise.resolve(newToken));
         let prismaMock = {
@@ -119,18 +98,8 @@ describe('Testing TokenVerifyService', () => {
     });
 
     it('should verify token', async () => {
-        let expireAt = new Date();
-        expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let tokenId: string = uuid();
-        let newToken: any = {
-            token: tokenId,
-            createdAt: new Date(),
-            email,
-            reason: "testing_purpose",
-            expireAt,
-        };
-
+        let newToken = generateFakeToken(30);
+        let { token: tokenId } = newToken;
         let isValidMock = jest.fn().mockImplementation(() => { });
         isValidMock.mockResolvedValue(Promise.resolve(newToken));
         let removeMock = jest.fn().mockImplementation(() => { });

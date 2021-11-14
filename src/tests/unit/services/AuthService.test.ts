@@ -2,21 +2,25 @@ import faker from 'faker';
 import AuthService from '../../../app/services/AuthService';
 import { hash } from '../../../helpers/crypto';
 
-it('should authenticate a valid user', async () => {
-    let password = "Arfc1456_$1";
-    let hashedPass = await hash(password);
-    let email = faker.internet.email();
-    let fakeUser = {
+async function getFakeUser(password?: string) {
+    password = password || faker.random.alphaNumeric();
+    return {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
-        email,
-        password: hashedPass,
+        email: faker.internet.email(),
+        password: await hash(password),
     };
+}
+
+it('should authenticate a valid user', async () => {
     let findByEmailMock = jest.fn().mockImplementation(() => { });
+    let password = faker.random.alphaNumeric();
+    let fakeUser = await getFakeUser(password);
     findByEmailMock.mockResolvedValue(Promise.resolve(fakeUser));
     let userServiceMock: any = { findByEmail: findByEmailMock };
     let authService = new AuthService(userServiceMock);
 
+    let { email } = fakeUser;
     let token = await authService.authenticate(email, password);
 
     expect(findByEmailMock).toHaveBeenCalledWith(email);
@@ -27,21 +31,14 @@ it('should authenticate a valid user', async () => {
 });
 
 it('should fail authenticate a user with invalid password', async () => {
-    let password = "Arfc1456_$1";
-    let hashedPass = await hash(password);
-    let email = faker.internet.email('farmer', 'birte');
-    let fakeUser = {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        email,
-        password: hashedPass,
-    };
+    let fakeUser = await getFakeUser();
+    let { email } = fakeUser;
     let findByEmailMock = jest.fn().mockImplementation(() => { });
     findByEmailMock.mockResolvedValue(Promise.resolve(fakeUser));
     let userServiceMock: any = { findByEmail: findByEmailMock };
     let authService = new AuthService(userServiceMock);
-
-    let token = await authService.authenticate(email, "some-other-pass");
+    let password = "some-other-pass";
+    let token = await authService.authenticate(email, password);
 
     expect(findByEmailMock).toHaveBeenCalledWith(email);
     expect(findByEmailMock).toHaveReturnedWith(Promise.resolve(undefined));
@@ -49,14 +46,14 @@ it('should fail authenticate a user with invalid password', async () => {
 });
 
 it('should fail authenticate unfound user', async () => {
-    let password = "Arfc1456_$1";
-    let email = faker.internet.email('farmer', 'birte');
+    let email = faker.internet.email();
 
     let findByEmailMock = jest.fn().mockImplementation(() => { });
     findByEmailMock.mockResolvedValue(Promise.resolve());
     let userServiceMock: any = { findByEmail: findByEmailMock };
     let authService = new AuthService(userServiceMock);
 
+    let password = faker.random.alphaNumeric();
     let token = await authService.authenticate(email, password);
 
     expect(findByEmailMock).toHaveBeenCalledWith(email);
