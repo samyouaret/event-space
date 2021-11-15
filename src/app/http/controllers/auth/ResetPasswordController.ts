@@ -1,29 +1,32 @@
 import { Request, Response } from "express";
-import ResetPasswordService from"../../../services/ResetPasswordService";
+import ResetPasswordService from "../../../services/ResetPasswordService";
 
 export default class ResetPasswordController {
 
     constructor(private readonly resetPasswordService: ResetPasswordService) { }
 
     async reset(req: Request, res: Response) {
-        let hash = req.params.hash;
+        let token = req.params.token;
         let password = req.body.password;
-        let reset = await this.resetPasswordService.reset(hash, password);
+        if (req.body.confirmPassword !== req.body.password) {
+            return res.status(422).json({ "error": "Password confirmation does not match password" });
+        }
+        let reset = await this.resetPasswordService.reset(token, password);
         if (reset) {
-            return res.status(200).json({ "message": "Password reset." });
+            return res.status(200).json({ "message": "Password reset successfully" });
         }
 
-        return res.status(404).json({ "message": "Cannot reset password." });
+        return res.status(422).json({ "error": "Cannot reset password." });
     }
 
     async generateToken(req: Request, res: Response) {
         let email = req.body.email;
         let notified = await this.resetPasswordService.notifyUser(email);
         if (notified) {
-            return res.status(200).json({ "message": "User notified" });
+            return res.status(201).json({ "message": "Request sent to user email." });
         }
 
-        return res.status(404).json({ "message": "Cannot notify user." });
+        return res.status(422).json({ "error": "Cannot notify user." });
     }
 
 }

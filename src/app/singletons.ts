@@ -4,11 +4,11 @@ import TokenVerifyService from "./services/TokenVerifyService";
 import Application from "./Application";
 import MailService from "./services/MailService";
 import { UserService } from "./services/UserService";
-import { createMailer } from "../factories/MailterFactory";
+import { createFakeMailer } from "../factories/MailerFactory";
 
 export default async function singletons(app: Application) {
     const prisma = getPrisma();
-    let transporter = await createMailer();
+    let transporter = await createFakeMailer();
     let userService: UserService = new UserService(prisma);
     let mailService = new MailService(transporter);
     let tokenVerifyService = new TokenVerifyService(prisma);
@@ -18,6 +18,7 @@ export default async function singletons(app: Application) {
         prisma,
         mailService,
         verifyEmailService,
+        tokenVerifyService,
         userService,
     };
 };

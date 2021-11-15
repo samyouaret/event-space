@@ -5,7 +5,7 @@ import TokenVerifyService from '../../app/services/TokenVerifyService';
 import faker from 'faker';
 import { Prisma } from '.prisma/client';
 import MailService, { MailSender } from '../../app/services/MailService';
-import { createMailer } from '../../factories/MailterFactory';
+import { createFakeMailer, createMailer } from '../../factories/MailerFactory';
 
 let prisma = getPrisma();
 let userService = new UserService(prisma);
@@ -13,7 +13,7 @@ let mailer: MailSender;
 
 beforeAll(async () => {
     await prisma.$connect();
-    mailer = await createMailer()
+    mailer = await createFakeMailer()
 });
 
 afterAll(async () => {

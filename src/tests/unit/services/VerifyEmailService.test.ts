@@ -30,6 +30,9 @@ describe('Testing VerifyEmail Service', () => {
         updateMock.mockResolvedValue(Promise.resolve(newToken));
         let userService = {
             update: updateMock,
+            findByEmail: () => {
+                return true;
+            }
         };
         let dummyMailService = {
             send: jest.fn().mockImplementation(() => { }),

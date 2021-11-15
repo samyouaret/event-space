@@ -22,7 +22,11 @@ export default class ResetPasswordService {
         })
     }
 
-    async notifyUser(email: string) {
+    async notifyUser(email: string):Promise<any> {
+        let user = await this.userService.findByEmail(email);
+        if (!user) {
+            return;
+        }
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
         let token = await this.tokenVerifyService.create(expireAt, email, this.reason);
