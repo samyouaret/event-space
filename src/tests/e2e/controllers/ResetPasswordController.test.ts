@@ -46,6 +46,20 @@ describe('Reset Password Routes', () => {
         });
     });
 
+    it('should validate email before send a reset token', (done) => {
+        let email = "invalid@email";
+        request.agent(app.getApplicationGateWay().getServer())
+            .post(GENEARTE_PASSWORD_URL)
+            .set('Content-Type', 'application/json')
+            .send({ email })
+            .expect(422)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                expect(res.body.errors.email).toBeDefined();
+                done();
+            });
+    });
+
     it('should reset a password with valid token', (done) => {
         let password = "Arfc1456_$1";
         let confirmPassword = password;
@@ -55,7 +69,6 @@ describe('Reset Password Routes', () => {
         seedNewUser(userService).then(user => {
             tokenVerifyService.create(expireAt, user.email, reason).then((newToken) => {
                 let url = `${RESET_PASSWORD_URL}/${newToken.token}`;
-                console.log(url);
                 request.agent(app.getApplicationGateWay().getServer())
                     .put(url)
                     .set('Content-Type', 'application/json')
