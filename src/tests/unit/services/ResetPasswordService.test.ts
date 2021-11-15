@@ -1,18 +1,6 @@
-import { v4 as uuid } from 'uuid';
 import faker from 'faker';
 import ResetPasswordService from '../../../app/services/ResetPasswordService';
-
-function generateFakeToken(AfterInMinutes: number) {
-    let expireAt = new Date();
-    expireAt.setMinutes(expireAt.getMinutes() + AfterInMinutes);
-    return {
-        token: uuid(),
-        createdAt: new Date(),
-        email: faker.internet.email(),
-        reason: "testing_purpose",
-        expireAt,
-    };
-}
+import { generateFakeToken } from '../../../helpers/fakers';
 
 describe('Testing resetPassword Service', () => {
 

@@ -1,17 +1,8 @@
-import faker from 'faker';
 import UserService from '../../../app/services/UserService';
 import { User } from ".prisma/client";
-import { v4 as uuid } from 'uuid';
+import { generateFakeUser } from '../../../helpers/fakers';
 
-let fakeUser: User = {
-    id: uuid(),
-    firstName: faker.name.firstName(),
-    lastName: faker.name.lastName(),
-    email: faker.internet.email(),
-    password: faker.random.alphaNumeric(),
-    role: 0,
-    verified: false,
-};
+let fakeUser: User = generateFakeUser();
 
 it('should create a new a User', async () => {
     let findFirst = jest.fn().mockImplementation(() => { });

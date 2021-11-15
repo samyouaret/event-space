@@ -6,6 +6,8 @@ import faker from 'faker';
 import { Prisma } from '.prisma/client';
 import MailService, { MailSender } from '../../app/services/MailService';
 import { createFakeMailer, createMailer } from '../../factories/MailerFactory';
+import { generateFakeUser } from '../../helpers/fakers';
+import { seedNewUser } from '../../helpers/test';
 
 let prisma = getPrisma();
 let userService = new UserService(prisma);
@@ -25,16 +27,7 @@ describe('Testing resetPassword Service', () => {
     it('should notify user with token', async () => {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let newUser: Prisma.UserCreateInput = {
-            firstName: faker.name.firstName(),
-            lastName: faker.name.lastName(),
-            email,
-            password: faker.random.alphaNumeric(),
-            role: 0,
-            verified: false,
-        };
-        await userService.create(newUser);
+        let newUser = await seedNewUser(userService);
         let tokenVerifyService = new TokenVerifyService(prisma);
 
         let mailService = new MailService(mailer);
@@ -43,7 +36,7 @@ describe('Testing resetPassword Service', () => {
             userService,
             mailService);
 
-        let { info, token } = await resetPasswordService.notifyUser(email);
+        let { info, token } = await resetPasswordService.notifyUser(newUser.email);
         expect(info).toHaveProperty('messageId');
         expect(info.response).toContain('250 Accepted');
         let validToken = await tokenVerifyService.isValid(token.token, resetPasswordService.reason);
@@ -53,29 +46,20 @@ describe('Testing resetPassword Service', () => {
     it('should reset password', async () => {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
-        let email = faker.internet.email();
-        let newUser: Prisma.UserCreateInput = {
-            firstName: faker.name.firstName(),
-            lastName: faker.name.lastName(),
-            email,
-            password: faker.random.alphaNumeric(),
-            role: 0,
-            verified: false,
-        };
-        await userService.create(newUser);
+        let newUser = await seedNewUser(userService);
         let tokenVerifyService = new TokenVerifyService(prisma);
         let reason = "reset_password";
-        let newToken = await tokenVerifyService.create(expireAt, email, reason);
+        let newToken = await tokenVerifyService.create(expireAt, newUser.email, reason);
         let dummyMailService = {};
         let resetPasswordService = new ResetPasswordService(
             tokenVerifyService,
             userService,
             dummyMailService as any);
         let newPassword = faker.random.alphaNumeric();
-        let UserBeforeReset = await userService.findByEmail(email);
+        let UserBeforeReset = await userService.findByEmail(newUser.email);
         let reset = await resetPasswordService.reset(newToken.token, newPassword);
         expect(reset).toBeTruthy();
-        let UserAfterReset = await userService.findByEmail(email);
+        let UserAfterReset = await userService.findByEmail(newUser.email);
         expect(UserBeforeReset.password).not.toEqual(UserAfterReset.password);
     });
 

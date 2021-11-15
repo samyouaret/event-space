@@ -1,10 +1,9 @@
 import request from 'supertest'
 import Application from '../../../app/Application';
-import faker from 'faker';
 import { createExpressApp } from '../../../factories/ExpressFactory';
 import TokenVerifyService from '../../../app/services/TokenVerifyService';
-import { Prisma } from '.prisma/client';
 import UserService from '../../../app/services/UserService';
+import { seedNewUser } from '../../../helpers/test';
 
 const expressApp = createExpressApp();
 const app = new Application(expressApp);
@@ -12,18 +11,6 @@ const GENEARTE_PASSWORD_URL = '/api/reset-password/generate';
 const RESET_PASSWORD_URL = '/api/reset-password';
 let tokenVerifyService: TokenVerifyService;
 let userService: UserService;
-
-async function createNewUser() {
-    let newUser: Prisma.UserCreateInput = {
-        firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        email: faker.internet.email(),
-        password: faker.random.alphaNumeric(),
-        role: 0,
-        verified: false,
-    };
-    return userService.create(newUser)
-}
 
 beforeAll(async () => {
     await app.init();
@@ -38,7 +25,7 @@ afterAll(async () => {
 
 describe('Reset Password Routes', () => {
     it('should generate a new password reset token', (done) => {
-        createNewUser().then(user => {
+        seedNewUser(userService).then(user => {
             let payload = { email: user.email };
             request.agent(app.getApplicationGateWay().getServer())
                 .post(GENEARTE_PASSWORD_URL)
@@ -65,7 +52,7 @@ describe('Reset Password Routes', () => {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
         let reason = "reset_password";
-        createNewUser().then(user => {
+        seedNewUser(userService).then(user => {
             tokenVerifyService.create(expireAt, user.email, reason).then((newToken) => {
                 let url = `${RESET_PASSWORD_URL}/${newToken.token}`;
                 console.log(url);
@@ -95,10 +82,9 @@ describe('Reset Password Routes', () => {
         let expireAt = new Date();
         expireAt.setMinutes(expireAt.getMinutes() + 30);
         let reason = "reset_password";
-        createNewUser().then(user => {
+        seedNewUser(userService).then(user => {
             tokenVerifyService.create(expireAt, user.email, reason).then((newToken) => {
                 let url = `${RESET_PASSWORD_URL}/${newToken.token}`;
-                console.log(url);
                 request.agent(app.getApplicationGateWay().getServer())
                     .put(url)
                     .set('Content-Type', 'application/json')

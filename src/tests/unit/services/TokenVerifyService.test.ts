@@ -1,19 +1,5 @@
-import { TokenVerify } from '.prisma/client';
-import faker from 'faker';
-import { v4 as uuid } from 'uuid';
 import TokenVerifyService from '../../../app/services/TokenVerifyService';
-
-function generateFakeToken(AfterInMinutes: number) {
-    let expireAt = new Date();
-    expireAt.setMinutes(expireAt.getMinutes() + AfterInMinutes);
-    return {
-        token: uuid(),
-        createdAt: new Date(),
-        email: faker.internet.email(),
-        reason: "testing_purpose",
-        expireAt,
-    };
-}
+import { generateFakeToken } from '../../../helpers/fakers';
 
 describe('Testing TokenVerifyService', () => {
 
