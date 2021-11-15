@@ -1,6 +1,6 @@
 import * as pathHelper from '../helpers/pathHelper';
 import ExpressApplication from "../app/gateways/ExpressApplication";
-import express from "express"
+import express from "express";
 
 export function createExpressApp() {
     let server = express();

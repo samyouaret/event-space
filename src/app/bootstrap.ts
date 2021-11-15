@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({ debug: true });
+dotenv.config();
 import Application from './Application';
 import { createExpressApp } from "../factories/ExpressFactory";
 

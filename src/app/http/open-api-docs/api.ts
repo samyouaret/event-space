@@ -2,14 +2,14 @@
 export const apiDoc = {
     openapi: '3.0.1',
     info: {
-        version: '1.3.0',
-        title: 'Users',
-        description: 'User management API',
+        version: '1.0.0',
+        title: 'Event Space',
+        description: 'Event Space REST API',
         termsOfService: 'http://api_url/terms/',
         contact: {
-            name: 'Wolox Team',
-            email: 'hello@wolox.co',
-            url: 'https://www.wolox.com.ar/'
+            name: 'Samy Ouaret',
+            email: 'samyouaret13@gmail.com',
+            url: 'https://samyouaret.me/'
         },
         license: {
             name: 'Apache 2.0',
