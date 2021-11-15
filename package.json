@@ -3,6 +3,7 @@
       "start": "ts-node src/index.ts",
       "build": "tsc",
       "test:unit": "jest -- ./src/tests/unit --runInBand --detectOpenHandles",
+      "test:e2e": "jest -- ./src/tests/e2e/controllers/auth --runInBand --detectOpenHandles",
       "test": "prisma migrate reset --force --preview-feature && prisma migrate deploy --preview-feature && jest -- ./src/tests --runInBand --detectOpenHandles"
    },
    "dependencies": {
