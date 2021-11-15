@@ -6,13 +6,23 @@ export default class VerifyEmailController {
     constructor(private readonly verifyEmailService: VerifyEmailService) { }
 
     async verify(req: Request, res: Response) {
-        let hash = req.params.hash;
-        let verified = await this.verifyEmailService.verify(hash);
+        let token = req.params.token;
+        let verified = await this.verifyEmailService.verify(token);
         if (verified) {
-            return res.status(200).json({ "message": "User verified" });
+            return res.status(200).json({ "message": "Email verified sucessfully" });
         }
 
-        return res.status(404).json({ "message": "Cannot verify user." });
+        return res.status(422).json({ "error": "Cannot verify email." });
+    }
+
+    async generateToken(req: Request, res: Response) {
+        let email = req.body.email;
+        let notified = await this.verifyEmailService.notifyUser(email);
+        if (notified) {
+            return res.status(201).json({ "message": "Request sent to user email." });
+        }
+
+        return res.status(422).json({ "error": "Cannot notify user." });
     }
 
 }
