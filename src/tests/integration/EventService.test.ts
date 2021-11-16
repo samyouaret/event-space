@@ -30,6 +30,7 @@ test('should create new event', async () => {
     expect(createdEvent.userId).toEqual(user.id);
 });
 
+
 test('should update an event', async () => {
     let eventService: EventService = new EventService(prisma);
     let user = await seedNewUser(userService);
@@ -72,9 +73,9 @@ test('should filter events', async () => {
     let newEvent = generateFakeEvent(user);
     newEvent.timezone = timezone;
     newEvent.location = location;
-    let event1 = await eventService.create(newEvent);
+    await eventService.create(newEvent);
     newEvent.id = uuid();
-    let event2 = await eventService.create(newEvent);
+    await eventService.create(newEvent);
     let events = await eventService.find({ params: { location, timezone } as any });
     expect(events).toHaveLength(2);
     expect(events).not.toContainEqual([createdEvent]);
@@ -90,9 +91,9 @@ test('should filter events', async () => {
     let newEvent = generateFakeEvent(user);
     newEvent.timezone = timezone;
     newEvent.location = location;
-    let event1 = await eventService.create(newEvent);
+    await eventService.create(newEvent);
     newEvent.id = uuid();
-    let event2 = await eventService.create(newEvent);
+    await eventService.create(newEvent);
     let events = await eventService.find({ params: { location, timezone } as any });
     expect(events).toHaveLength(2);
     expect(events).not.toContainEqual([createdEvent]);

@@ -4,7 +4,11 @@ export class EventService {
     constructor(private readonly prisma: PrismaClient) { }
 
     async create(event: Prisma.EventUncheckedCreateInput) {
-        return this.prisma.event.create({ data: event });
+        return this.prisma.event.upsert({
+            create: event,
+            update: event,
+            where: { id: event.id }
+        });
     }
 
     async find({ params, filters, order = 'desc' }: { params: Prisma.EventWhereInput; filters?: Prisma.EventFindManyArgs; order?: 'asc' | 'desc'; }) {
@@ -44,8 +48,10 @@ export class EventService {
     }
 
     async update(id: string, event: Prisma.EventUpdateInput) {
+        let newEvent = Object.assign({}, event);
+        delete newEvent.id;
         return this.prisma.event.update({
-            data: event, where: { id }
+            data: newEvent, where: { id }
         });
     }
 

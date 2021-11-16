@@ -6,14 +6,14 @@ export default {
             body('title')
                 .notEmpty()
                 .withMessage('Title cannot be empty')
-                .trim()
-            ,
+                .trim(),
             body('organizer')
                 .notEmpty()
                 .withMessage('Organizer cannot be empty')
                 .trim()
             ,
             body('description')
+                .optional()
                 .notEmpty()
                 .withMessage('Description cannot be empty')
                 .trim()
@@ -29,18 +29,18 @@ export default {
                 .trim()
             ,
             body('startDate')
+                .optional()
                 .notEmpty()
                 .withMessage('Start date cannot be empty')
                 .trim()
-                .isDate()
-                .withMessage('Start date must be a valid date')
+                // .withMessage('Start date must be a valid date')
             ,
             body('endDate')
+                .optional()
                 .notEmpty()
-                .withMessage('Start date cannot be empty')
+                .withMessage('End date cannot be empty')
                 .trim()
-                .isDate()
-                .withMessage('Start date must be a valid date')
+                // .withMessage('End date must be a valid date')
             ,
         ]
     }
