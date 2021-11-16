@@ -24,7 +24,10 @@ model Event {
   userId      String
   User        User      @relation(fields: [userId], references: [id])
 
-  @@index([userId], name: "user_fk")
+  price          Float     @default(0)
+  seats          Int
+  startSale      DateTime? @db.Timestamp(0)
+  endSale        DateTime? @db.Timestamp(0)
 }
 
 model User {
@@ -46,6 +49,7 @@ model TokenVerify {
   createdAt DateTime @default(now())
   expireAt  DateTime
   reason    String   @db.VarChar(255)
+
   @@index([token], name: "token_index")
 }
 

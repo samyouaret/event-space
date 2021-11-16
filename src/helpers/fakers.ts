@@ -28,6 +28,10 @@ export const generateFakeToken = (AfterInMinutes: number) => {
 }
 
 export const generateFakeEvent = (user: any) => {
+    let seats = faker.datatype.number();
+    let startSale = faker.date.future();
+    let endSale = new Date(startSale);
+    endSale.setDate(endSale.getDate() + 30);
     return {
         createdAt: new Date(),
         startDate: new Date(),
@@ -35,6 +39,10 @@ export const generateFakeEvent = (user: any) => {
         location: faker.address.country(),
         id: uuid(),
         userId: user.id,
+        price: faker.datatype.float(2),
+        seats,
+        startSale: faker.date.future(),
+        endSale: faker.date.future(),
         timezone: faker.address.timeZone(),
         title: faker.datatype.string(30),
         organizer: faker.name.findName(),
