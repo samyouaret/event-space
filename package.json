@@ -4,7 +4,7 @@
       "build": "tsc",
       "migrate:reset": "prisma migrate reset --force --preview-feature && prisma migrate deploy --preview-feature",
       "test:unit": "jest -- ./src/tests/unit --runInBand --detectOpenHandles",
-      "test:integration": "yarn run migrate:reset && jest -- ./src/tests/integration --runInBand --detectOpenHandles",
+      "test:integration": "jest -- ./src/tests/integration/EventService.test.ts --runInBand --detectOpenHandles",
       "test:e2e": "jest -- ./src/tests/e2e/controllers/VerifyEmailController.test.ts --runInBand --detectOpenHandles",
       "test": "yarn run migrate:reset && jest -- ./src/tests --runInBand --detectOpenHandles"
    },

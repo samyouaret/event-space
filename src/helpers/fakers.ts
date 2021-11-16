@@ -26,3 +26,18 @@ export const generateFakeToken = (AfterInMinutes: number) => {
         expireAt,
     };
 }
+
+export const generateFakeEvent = (user: any) => {
+    return {
+        createdAt: new Date(),
+        startDate: new Date(),
+        endDate: faker.date.future(),
+        location: faker.address.country(),
+        id: uuid(),
+        userId: user.id,
+        timezone: faker.address.timeZone(),
+        title: faker.datatype.string(30),
+        organizer: faker.name.findName(),
+        type: faker.random.alpha({ count: 10 }),
+    };
+}

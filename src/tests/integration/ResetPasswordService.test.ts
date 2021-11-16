@@ -3,10 +3,8 @@ import UserService from '../../app/services/UserService';
 import { getPrisma } from '../../app/prisma';
 import TokenVerifyService from '../../app/services/TokenVerifyService';
 import faker from 'faker';
-import { Prisma } from '.prisma/client';
 import MailService, { MailSender } from '../../app/services/MailService';
 import { createFakeMailer, createMailer } from '../../factories/MailerFactory';
-import { generateFakeUser } from '../../helpers/fakers';
 import { seedNewUser } from '../../helpers/test';
 
 let prisma = getPrisma();
