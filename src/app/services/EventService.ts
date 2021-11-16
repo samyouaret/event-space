@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid';
 import type { Prisma, PrismaClient } from ".prisma/client";
 
 export class EventService {
@@ -6,13 +5,6 @@ export class EventService {
 
     async create(event: Prisma.EventUncheckedCreateInput) {
         return this.prisma.event.create({ data: event });
-    }
-
-    async all(params?: any) {
-        return this.prisma.event.findMany({
-            where: params,
-            orderBy: { createdAt: 'desc' }
-        });
     }
 
     async find({ params, filters, order = 'desc' }: { params: Prisma.EventWhereInput; filters?: Prisma.EventFindManyArgs; order?: 'asc' | 'desc'; }) {
