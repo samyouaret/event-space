@@ -13,7 +13,7 @@ export default class AuthController {
             if (event) {
                 return response.status(201).json(event);
             }
-            return response.status(401).json();
+            return response.sendStatus(401);
         } catch (err) {
             return response.status(400).json({ message: (err as Error).message });
         }
@@ -25,7 +25,16 @@ export default class AuthController {
         if (event) {
             return response.status(200).json(event);
         }
-        return response.status(400).json();
+        return response.sendStatus(400);
+    }
+
+    async findOne(request: Request, response: Response) {
+        let event: Event | null =
+            await this.eventService.findById(request.params.id);
+        if (event) {
+            return response.status(200).json(event);
+        }
+        return response.sendStatus(404);
     }
 
     async remove(request: Request, response: Response) {
@@ -34,7 +43,7 @@ export default class AuthController {
         if (event) {
             return response.status(204).json(event);
         }
-        return response.status(204).json();
+        return response.sendStatus(204);
     }
 
 }

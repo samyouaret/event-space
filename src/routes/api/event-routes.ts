@@ -13,6 +13,7 @@ export default async function (app: Application): Promise<void> {
     router.post('/api/events', express.json(), eventCreateValidator.rules(), validate, controller.create.bind(controller));
     router.put('/api/events/:id', express.json(), controller.update.bind(controller));
     router.delete('/api/events/:id', express.json(), controller.remove.bind(controller));
+    router.get('/api/events/:id', controller.findOne.bind(controller));
 
     app.getApplicationGateWay().getServer().use(router);
 }

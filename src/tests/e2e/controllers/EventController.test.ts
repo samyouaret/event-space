@@ -5,16 +5,20 @@ import UserService from '../../../app/services/UserService';
 import { seedNewUser } from '../../../helpers/test';
 import { generateFakeEvent } from '../../../helpers/fakers';
 import faker from 'faker';
+import EventService from '../../../app/services/EventService';
+import { v4 } from 'uuid';
 
 const expressApp = createExpressApp();
 const app = new Application(expressApp);
 
 const EVENT_URL = '/api/events';
 let userService: UserService;
+let eventService: EventService;
 
 beforeAll(async () => {
     await app.init();
     userService = new UserService(app.getPrisma());
+    eventService = new EventService(app.getPrisma());
 });
 
 
@@ -59,6 +63,33 @@ describe('Event api routes', () => {
                     done();
                 });
         });
+    });
+
+    it('should get and event by id', (done) => {
+        seedNewUser(userService).then(user => {
+            let newEvent = generateFakeEvent(user);
+            eventService.create(newEvent).then(event => {
+                request.agent(app.getApplicationGateWay().getServer())
+                    .get(`${EVENT_URL}/${event.id}`)
+                    .expect(200)
+                    .end(function (err, res) {
+                        expect(err).toBeNull();
+                        expect(res.body).toBeTruthy();
+                        done();
+                    });
+            });
+        });
+    });
+
+   test('should fail to get unexistent event by id', (done) => {
+        let id = v4();
+        request.agent(app.getApplicationGateWay().getServer())
+            .get(`${EVENT_URL}/${id}`)
+            .expect(404)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                done();
+            });
     });
 
     it('should update an event', (done) => {
