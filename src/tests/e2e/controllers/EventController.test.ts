@@ -7,6 +7,9 @@ import { generateFakeEvent, seedEvents } from '../../../helpers/fakers';
 import faker from 'faker';
 import EventService from '../../../app/services/EventService';
 import { v4 as uuid } from 'uuid';
+import { root_path } from '../../../helpers/pathHelper';
+import { Awsconfig } from '../../../config/storage';
+import AWS from 'aws-sdk';
 
 const expressApp = createExpressApp();
 const app = new Application(expressApp);
@@ -16,11 +19,14 @@ let userService: UserService;
 let eventService: EventService;
 
 const SEED_EVENT_COUNT = 10;
-
+AWS.config.update(Awsconfig);
+let s3: AWS.S3 = new AWS.S3();
+let user: any;
 beforeAll(async () => {
     await app.init();
     userService = new UserService(app.getPrisma());
     eventService = new EventService(app.getPrisma());
+    user = await seedNewUser(userService);
     await seedEvents(eventService, userService, SEED_EVENT_COUNT);
 });
 
@@ -31,56 +37,50 @@ afterAll(async () => {
 
 describe('Event api routes', () => {
     test('should create a new event', (done) => {
-        seedNewUser(userService).then(user => {
-            let payload = generateFakeEvent(user);
-            request.agent(app.getApplicationGateWay().getServer())
-                .post(EVENT_URL)
-                .set('Content-Type', 'application/json')
-                .send(payload)
-                .expect(201)
-                .end(function (err, res) {
-                    expect(err).toBeNull();
-                    expect(res.body).toBeDefined();
-                    app.prisma.event.findFirst({
-                        where: { id: res.body.id }
-                    }).then((event) => {
-                        expect(event).not.toBeNull();
-                        done();
-                    })
-                });
-        });
+        let payload = generateFakeEvent(user);
+        request.agent(app.getApplicationGateWay().getServer())
+            .post(EVENT_URL)
+            .set('Content-Type', 'application/json')
+            .send(payload)
+            .expect(201)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                expect(res.body).toBeDefined();
+                app.prisma.event.findFirst({
+                    where: { id: res.body.id }
+                }).then((event) => {
+                    expect(event).not.toBeNull();
+                    done();
+                })
+            });
     });
 
     test('should get bad request when create an event with bad fields', (done) => {
-        seedNewUser(userService).then(user => {
-            let payload = generateFakeEvent(user);
-            (payload as any).foobar = "foobar";
-            request.agent(app.getApplicationGateWay().getServer())
-                .post(EVENT_URL)
-                .set('Content-Type', 'application/json')
-                .send(payload)
-                .expect(400)
-                .end(function (err, res) {
-                    expect(err).toBeNull();
-                    expect(res.body.message).toBe('Cannot create event');
-                    done();
-                });
-        });
+        let payload = generateFakeEvent(user);
+        (payload as any).foobar = "foobar";
+        request.agent(app.getApplicationGateWay().getServer())
+            .post(EVENT_URL)
+            .set('Content-Type', 'application/json')
+            .send(payload)
+            .expect(400)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                expect(res.body.message).toBe('Cannot create event');
+                done();
+            });
     });
 
     test('should get and event by id', (done) => {
-        seedNewUser(userService).then(user => {
-            let newEvent = generateFakeEvent(user);
-            eventService.create(newEvent).then(event => {
-                request.agent(app.getApplicationGateWay().getServer())
-                    .get(`${EVENT_URL}/${event.id}`)
-                    .expect(200)
-                    .end(function (err, res) {
-                        expect(err).toBeNull();
-                        expect(res.body).toBeTruthy();
-                        done();
-                    });
-            });
+        let newEvent = generateFakeEvent(user);
+        eventService.create(newEvent).then(event => {
+            request.agent(app.getApplicationGateWay().getServer())
+                .get(`${EVENT_URL}/${event.id}`)
+                .expect(200)
+                .end(function (err, res) {
+                    expect(err).toBeNull();
+                    expect(res.body).toBeTruthy();
+                    done();
+                });
         });
     });
 
@@ -138,49 +138,71 @@ describe('Event api routes', () => {
 
     test('should update an event', (done) => {
         let partialEvent = {
-            image: faker.image.imageUrl(),
             summary: faker.lorem.paragraphs(),
             description: faker.lorem.sentence(),
+            price: faker.datatype.float()
         }
-        seedNewUser(userService).then(user => {
-            let payload = generateFakeEvent(user);
-            app.prisma.event.create({ data: payload }).then(event => {
-                request.agent(app.getApplicationGateWay().getServer())
-                    .put(`${EVENT_URL}/${event.id}`)
-                    .set('Content-Type', 'application/json')
-                    .send(partialEvent)
-                    .expect(200)
-                    .end(function (err, res) {
-                        expect(err).toBeNull();
-                        expect(res.body).toBeDefined();
-                        app.prisma.event.findFirst({
-                            where: { id: event.id }
-                        }).then((event) => {
-                            expect(event?.image).toEqual(partialEvent.image);
-                            done();
-                        })
-                    });
-            })
-        });
+        let payload = generateFakeEvent(user);
+        app.prisma.event.create({ data: payload }).then(event => {
+            request.agent(app.getApplicationGateWay().getServer())
+                .put(`${EVENT_URL}/${event.id}`)
+                .set('Content-Type', 'application/json')
+                .send(partialEvent)
+                .expect(200)
+                .end(function (err, res) {
+                    expect(err).toBeNull();
+                    expect(res.body).toBeDefined();
+                    app.prisma.event.findFirst({
+                        where: { id: event.id }
+                    }).then((event) => {
+                        expect(event?.price).toEqual(partialEvent.price);
+                        done();
+                    })
+                });
+        })
     });
 
-    test('should remove an event', (done) => {
-        seedNewUser(userService).then(user => {
-            let payload = generateFakeEvent(user);
-            app.prisma.event.create({ data: payload }).then(event => {
-                request.agent(app.getApplicationGateWay().getServer())
-                    .delete(`${EVENT_URL}/${event.id}`)
-                    .expect(204)
-                    .end(function (err) {
-                        expect(err).toBeNull();
-                        app.prisma.event.findFirst({
-                            where: { id: event.id }
-                        }).then((event) => {
-                            expect(event).toBeNull();
-                            done();
-                        })
-                    });
-            })
-        });
+    test('should upload image to an event', (done) => {
+        let payload = generateFakeEvent(user);
+        app.prisma.event.create({ data: payload }).then(event => {
+            request.agent(app.getApplicationGateWay().getServer())
+                .patch(`${EVENT_URL}/${event.id}/upload-image`)
+                .attach('image', root_path('src/tests/files/image_test.jpg'))
+                .expect(200)
+                .end(function (err, res) {
+                    expect(err).toBeNull();
+                    expect(res.body).toBeDefined();
+                    app.prisma.event.findFirst({
+                        where: { id: event.id }
+                    }).then((event) => {
+                        expect(event?.image).not.toBeNull();
+                        let Key = event?.image?.split('/').pop() as string;
+                        s3.headObject({
+                            Bucket: Awsconfig.bucket_name,
+                            Key,
+                        }).promise().then(() => {
+                            done()
+                        });
+                    })
+                });
+        })
+    });
+});
+
+test('should remove an event', (done) => {
+    let payload = generateFakeEvent(user);
+    app.prisma.event.create({ data: payload }).then(event => {
+        request.agent(app.getApplicationGateWay().getServer())
+            .delete(`${EVENT_URL}/${event.id}`)
+            .expect(204)
+            .end(function (err) {
+                expect(err).toBeNull();
+                app.prisma.event.findFirst({
+                    where: { id: event.id }
+                }).then((event) => {
+                    expect(event).toBeNull();
+                    done();
+                })
+            });
     });
 });
