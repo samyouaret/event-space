@@ -1,10 +1,13 @@
 import { Event } from ".prisma/client";
+import type { S3 } from "aws-sdk";
 import { Request, Response } from "express";
+import { Awsconfig } from "../../../config/storage";
 import { EventService } from "../../services/EventService";
 
-export default class AuthController {
+export default class EventController {
 
-    constructor(private readonly eventService: EventService) { }
+    constructor(private readonly eventService: EventService,
+        private readonly s3: S3) { }
 
     async create(request: Request, response: Response) {
         try {
@@ -30,13 +33,25 @@ export default class AuthController {
     }
 
     async uploadImage(request: Request, response: Response) {
-        let filename = request.file?.filename;
+        let filename = (request.file as any).location;
+        await this.deleteImageFromS3(request.params.id);
         let event: Event | undefined =
-            await this.eventService.update(request.params.id, request.body);
+            await this.eventService.update(request.params.id, { image: filename });
         if (event) {
             return response.status(200).json(event);
         }
-        return response.sendStatus(400);
+        response.sendStatus(400);
+    }
+
+    private async deleteImageFromS3(id: string) {
+        let currentEvent: Event | null = await this.eventService.findById(id);
+        if (currentEvent && currentEvent.image != null) {
+            let Key = currentEvent.image.split('/').pop() as string;
+            await this.s3.deleteObject({
+                Bucket: Awsconfig.bucket_name,
+                Key,
+            }).promise();
+        }
     }
 
     async findOne(request: Request, response: Response) {
