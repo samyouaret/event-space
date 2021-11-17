@@ -1,6 +1,9 @@
 import type { User } from ".prisma/client";
 import faker from "faker";
 import { v4 as uuid } from "uuid";
+import type EventService from "../app/services/EventService";
+import type UserService from "../app/services/UserService";
+import { seedNewUser } from "./test";
 
 export const generateFakeUser = (OverrideUser?: any): User => {
     return {
@@ -48,4 +51,13 @@ export const generateFakeEvent = (user: any) => {
         organizer: faker.name.findName(),
         type: faker.random.alpha({ count: 10 }),
     };
+}
+
+export const seedEvents = async (eventService: EventService, userService: UserService, n: number = 20) => {
+    let user = await seedNewUser(userService);
+    for (let i = 0; i < n; i++) {
+        let event = generateFakeEvent(user);
+        await eventService.create(event);
+    }
+    return user;
 }

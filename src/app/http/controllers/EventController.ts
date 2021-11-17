@@ -37,6 +37,33 @@ export default class AuthController {
         return response.sendStatus(404);
     }
 
+    async findMany(request: Request, response: Response) {
+        let take = Math.min(50, +(request.query as any).take);
+        let page = request.query.page || 0;
+        page = parseInt(request.query.page as any) || 1;
+        let skip = page == 1 ? 0 : page * take;
+        delete request.query.page;
+        delete request.query.take;
+        let events: Event[] =
+            await this.eventService.find({
+                params: request.query,
+                filters: {
+                    take,
+                    skip,
+                }
+            });
+        let total = await this.eventService.count(request.query);
+        let nextPage = (skip + take) < total ? page + 1 : null;
+        let previousPage = (skip - take) > 0 ? page - 1 : null;
+        response.status(200).json({
+            value: events,
+            total,
+            page,
+            nextPage,
+            previousPage,
+        });
+    }
+
     async remove(request: Request, response: Response) {
         let event: Event | undefined =
             await this.eventService.remove(request.params.id);

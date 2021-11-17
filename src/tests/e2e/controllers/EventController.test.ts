@@ -3,10 +3,10 @@ import Application from '../../../app/Application';
 import { createExpressApp } from '../../../factories/ExpressFactory';
 import UserService from '../../../app/services/UserService';
 import { seedNewUser } from '../../../helpers/test';
-import { generateFakeEvent } from '../../../helpers/fakers';
+import { generateFakeEvent, seedEvents } from '../../../helpers/fakers';
 import faker from 'faker';
 import EventService from '../../../app/services/EventService';
-import { v4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 const expressApp = createExpressApp();
 const app = new Application(expressApp);
@@ -15,10 +15,13 @@ const EVENT_URL = '/api/events';
 let userService: UserService;
 let eventService: EventService;
 
+const SEED_EVENT_COUNT = 10;
+
 beforeAll(async () => {
     await app.init();
     userService = new UserService(app.getPrisma());
     eventService = new EventService(app.getPrisma());
+    await seedEvents(eventService, userService, SEED_EVENT_COUNT);
 });
 
 
@@ -27,7 +30,7 @@ afterAll(async () => {
 });
 
 describe('Event api routes', () => {
-    it('should create a new event', (done) => {
+    test('should create a new event', (done) => {
         seedNewUser(userService).then(user => {
             let payload = generateFakeEvent(user);
             request.agent(app.getApplicationGateWay().getServer())
@@ -48,7 +51,7 @@ describe('Event api routes', () => {
         });
     });
 
-    it('should get bad request when create an event with bad fields', (done) => {
+    test('should get bad request when create an event with bad fields', (done) => {
         seedNewUser(userService).then(user => {
             let payload = generateFakeEvent(user);
             (payload as any).foobar = "foobar";
@@ -65,7 +68,7 @@ describe('Event api routes', () => {
         });
     });
 
-    it('should get and event by id', (done) => {
+    test('should get and event by id', (done) => {
         seedNewUser(userService).then(user => {
             let newEvent = generateFakeEvent(user);
             eventService.create(newEvent).then(event => {
@@ -81,8 +84,8 @@ describe('Event api routes', () => {
         });
     });
 
-   test('should fail to get unexistent event by id', (done) => {
-        let id = v4();
+    test('should fail to get unexistent event by id', (done) => {
+        let id = uuid();
         request.agent(app.getApplicationGateWay().getServer())
             .get(`${EVENT_URL}/${id}`)
             .expect(404)
@@ -92,7 +95,48 @@ describe('Event api routes', () => {
             });
     });
 
-    it('should update an event', (done) => {
+    test('should get many events', (done) => {
+        let take = 3;
+        request.agent(app.getApplicationGateWay().getServer())
+            .get(`${EVENT_URL}`)
+            .query({ take })
+            .set('content-type', 'application/json')
+            .expect(200)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                expect(res.body.value).toBeDefined();
+                expect(res.body.total).toBeGreaterThanOrEqual(SEED_EVENT_COUNT);
+                expect(res.body.nextPage).not.toBeNull();
+                expect(res.body.value).toHaveLength(take);
+                expect(res.body.previousPage).toBeNull();
+                done();
+            });
+    });
+
+    test('should get many events by page', (done) => {
+        let take = 3;
+        let page = 2;
+        request.agent(app.getApplicationGateWay().getServer())
+            .get(`${EVENT_URL}`)
+            .query({ take, page })
+            .set('content-type', 'application/json')
+            .expect(200)
+            .end(function (err, res) {
+                expect(err).toBeNull();
+                expect(res.body.value).toBeDefined();
+                expect(res.body.total).toBeGreaterThanOrEqual(SEED_EVENT_COUNT);
+                expect(res.body.nextPage).not.toBeNull();
+                expect(res.body.value).toHaveLength(take);
+                expect(res.body.page).toBe(page);
+                expect(res.body.previousPage).toBe(page - 1);
+                expect(res.body.nextPage).toBe(page + 1);
+                expect(res.body.previousPage).not.toBeNull();
+                done();
+            });
+    });
+
+
+    test('should update an event', (done) => {
         let partialEvent = {
             image: faker.image.imageUrl(),
             summary: faker.lorem.paragraphs(),
@@ -120,14 +164,14 @@ describe('Event api routes', () => {
         });
     });
 
-    it('should remove an event', (done) => {
+    test('should remove an event', (done) => {
         seedNewUser(userService).then(user => {
             let payload = generateFakeEvent(user);
             app.prisma.event.create({ data: payload }).then(event => {
                 request.agent(app.getApplicationGateWay().getServer())
                     .delete(`${EVENT_URL}/${event.id}`)
                     .expect(204)
-                    .end(function (err, res) {
+                    .end(function (err) {
                         expect(err).toBeNull();
                         app.prisma.event.findFirst({
                             where: { id: event.id }

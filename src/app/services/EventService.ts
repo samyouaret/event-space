@@ -29,14 +29,13 @@ export class EventService {
         }
     }
 
-    async count(params?: Prisma.EventWhereInput) {
+    async count(params?: Prisma.EventWhereInput): Promise<number> {
         try {
-            let events = await this.prisma.event.count({
+            return await this.prisma.event.count({
                 where: params,
             });
-            return events;
         } catch (error) {
-            return [];
+            return 0;
         }
     }
 

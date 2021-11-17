@@ -148,7 +148,7 @@ test('should fail get count of events with invalid fields', async () => {
     await eventService.create(generateFakeEvent(user));
     await eventService.create(generateFakeEvent(user));
     let events = await eventService.count({ invalid: "invalid" } as any);
-    expect(events).toHaveLength(0);
+    expect(events).toBe(0);
 });
 
 test('should remove an event', async () => {
