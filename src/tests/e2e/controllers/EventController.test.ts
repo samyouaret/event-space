@@ -44,6 +44,23 @@ describe('Event api routes', () => {
         });
     });
 
+    it('should get bad request when create an event with bad fields', (done) => {
+        seedNewUser(userService).then(user => {
+            let payload = generateFakeEvent(user);
+            (payload as any).foobar = "foobar";
+            request.agent(app.getApplicationGateWay().getServer())
+                .post(EVENT_URL)
+                .set('Content-Type', 'application/json')
+                .send(payload)
+                .expect(400)
+                .end(function (err, res) {
+                    expect(err).toBeNull();
+                    expect(res.body.message).toBe('Cannot create event');
+                    done();
+                });
+        });
+    });
+
     it('should update an event', (done) => {
         let partialEvent = {
             image: faker.image.imageUrl(),
