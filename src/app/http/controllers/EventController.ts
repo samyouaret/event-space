@@ -15,7 +15,7 @@ export default class AuthController {
             }
             return response.status(401).json();
         } catch (err) {
-            return response.status(401).json({ message: (err as Error).message });
+            return response.status(400).json({ message: (err as Error).message });
         }
     }
 

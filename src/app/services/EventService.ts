@@ -4,11 +4,16 @@ export class EventService {
     constructor(private readonly prisma: PrismaClient) { }
 
     async create(event: Prisma.EventUncheckedCreateInput) {
-        return this.prisma.event.upsert({
-            create: event,
-            update: event,
-            where: { id: event.id }
-        });
+        let newEvent = Object.assign({}, event);
+        delete newEvent.id;
+        try {
+            let createdEvent = await this.prisma.event.create({
+                data: newEvent
+            });
+            return createdEvent;
+        } catch (error) {
+            throw new Error("Cannot create event");
+        }
     }
 
     async find({ params, filters, order = 'desc' }: { params: Prisma.EventWhereInput; filters?: Prisma.EventFindManyArgs; order?: 'asc' | 'desc'; }) {

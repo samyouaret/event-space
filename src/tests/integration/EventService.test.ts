@@ -30,6 +30,19 @@ test('should create new event', async () => {
     expect(createdEvent.userId).toEqual(user.id);
 });
 
+test('should fail create an event with invalid fields', async () => {
+    let eventService: EventService = new EventService(prisma);
+    let user = await seedNewUser(userService);
+    let fakeEvent = generateFakeEvent(user);
+    (fakeEvent as any).foobar = "foobar";
+    expect.assertions(1);
+    try {
+        await eventService.create(fakeEvent);
+    } catch (err) {
+        expect((err as Error).message).toBe('Cannot create event');
+    }
+});
+
 
 test('should update an event', async () => {
     let eventService: EventService = new EventService(prisma);
@@ -50,7 +63,7 @@ test('should find event by id', async () => {
     let user = await seedNewUser(userService);
     let fakeEvent = generateFakeEvent(user);
     let createdEvent = await eventService.create(fakeEvent);
-    let event = await eventService.findById(fakeEvent.id);
+    let event = await eventService.findById(createdEvent.id);
     expect(createdEvent).toEqual(event);
 });
 
