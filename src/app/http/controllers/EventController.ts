@@ -20,6 +20,17 @@ export default class AuthController {
     }
 
     async update(request: Request, response: Response) {
+        delete request.body.image;
+        let event: Event | undefined =
+            await this.eventService.update(request.params.id, request.body);
+        if (event) {
+            return response.status(200).json(event);
+        }
+        return response.sendStatus(400);
+    }
+
+    async uploadImage(request: Request, response: Response) {
+        let filename = request.file?.filename;
         let event: Event | undefined =
             await this.eventService.update(request.params.id, request.body);
         if (event) {

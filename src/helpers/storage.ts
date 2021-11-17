@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import storeConfig from '../config/storage';
 import { env } from '../helpers/pathHelper';
 import path from 'path';
@@ -8,56 +8,24 @@ export const storage = (filePath: string) => {
     return path.join(storeConfig.publicPath, filePath);
 };
 
-export async function create(filePath: any) {
-    return new Promise((resolve, reject) => {
-        fs.open(storage(filePath), 'w', (err: any, number: unknown) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(number);
-        })
-    });
+export async function create(filePath: string) {
+    return fs.open(storage(filePath), 'w');
 }
 
 export async function truncate(dir: any) {
-    return new Promise((resolve, reject) => {
-        let directory = storage(dir);
-        fs.readdir(directory, (err: any, files: any) => {
-            if (err) {
-                return reject(err);
-            }
-            for (const file of files) {
-                fs.unlink(path.join(directory, file), (err: any) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                });
-            }
-            resolve(true);
-        });
-    });
+    let directory = storage(dir);
+    let files = await fs.readdir(directory);
+    for (const file of files) {
+        await fs.unlink(path.join(directory, file));
+    }
 }
 
 export async function remove(filePath: any) {
-    return new Promise((resolve, reject) => {
-        fs.unlink(storage(filePath), (err: any) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(true);
-        })
-    });
+    return fs.unlink(storage(filePath))
 }
 
 export async function has(filePath: string) {
-    return new Promise((resolve, reject) => {
-        fs.access(storage(filePath), fs.constants.F_OK, (err: any) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(true);
-        })
-    });
+    return fs.access(storage(filePath));
 }
 
 export function multer(destination: string, options?: multerUploader.Options): multerUploader.Multer {
@@ -68,7 +36,7 @@ export function multer(destination: string, options?: multerUploader.Options): m
         callback(null, newName)
     }
     let storage = null;
-    if (storeConfig.storeType == "s3") {
+    if (storeConfig.storeType == "s3" && env('APP_ENV') != 'test') {
         const multerS3 = require('multer-s3');
         const aws = require('aws-sdk');
         aws.config.update({
@@ -85,7 +53,7 @@ export function multer(destination: string, options?: multerUploader.Options): m
         })
     } else {
         storage = multerUploader.diskStorage({
-            destination: function (req: any, file: any, callback: (arg0: null, arg1: any) => void) {
+            destination: function (_req: any, _file: any, callback: (arg0: null, arg1: any) => void) {
                 callback(null, path.join(storeConfig.publicPath, destination))
             },
             filename: genereateFileName
