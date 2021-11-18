@@ -6,6 +6,7 @@ export class EventService {
     async create(event: Prisma.EventUncheckedCreateInput) {
         let newEvent = Object.assign({}, event);
         delete newEvent.id;
+        newEvent.takenSeats = 0;
         try {
             let createdEvent = await this.prisma.event.create({
                 data: newEvent
@@ -54,6 +55,7 @@ export class EventService {
     async update(id: string, event: Prisma.EventUpdateInput) {
         let newEvent = Object.assign({}, event);
         delete newEvent.id;
+        delete newEvent.takenSeats;
         return this.prisma.event.update({
             data: newEvent, where: { id }
         });

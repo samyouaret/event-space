@@ -24,10 +24,12 @@ model Event {
   userId      String
   User        User      @relation(fields: [userId], references: [id])
 
-  price          Float     @default(0)
-  seats          Int
-  startSale      DateTime? @db.Timestamp(0)
-  endSale        DateTime? @db.Timestamp(0)
+  price      Float     @default(0)
+  seats      Int
+  takenSeats Int       @default(0)
+  startSale  DateTime? @db.Timestamp(0)
+  endSale    DateTime? @db.Timestamp(0)
+  orders     Order[]
 }
 
 model User {
@@ -40,6 +42,7 @@ model User {
   verified  Boolean @default(false)
 
   events Event[]
+  orders Order[]
   @@index([email], name: "email_index")
 }
 
@@ -67,4 +70,18 @@ model ResetPassword {
   email     String
 
   @@index([hash], name: "resetPassword_hash_index")
+}
+
+model Order {
+  id      String      @id @default(uuid())
+  userId  String
+  User    User        @relation(fields: [userId], references: [id])
+  eventId String
+  status  OrderStatus @default(PENDING)
+  Event   Event       @relation(fields: [eventId], references: [id])
+}
+
+enum OrderStatus {
+  CONFIRMED
+  PENDING
 }
