@@ -19,12 +19,6 @@ afterAll(async () => {
     await prisma.$disconnect();
 });
 
-afterAll(async () => {
-    await prisma.order.deleteMany();
-    await prisma.event.deleteMany();
-    await prisma.user.deleteMany();
-});
-
 test('should create new Order', async () => {
     let eventService: EventService = new EventService(prisma);
     let fakeEvent = generateFakeEvent(user);
