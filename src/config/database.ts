@@ -7,7 +7,7 @@ export const development: PrismaClientOptions = {
             url: env('DATABASE_URL')
         },
     },
-    log: ['query'],
+    log: ['query', 'info'],
 }
 export const test: PrismaClientOptions = {
     datasources: {

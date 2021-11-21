@@ -4,11 +4,11 @@ import UserService from "../../app/services/UserService";
 import OrderService from "../../app/services/OrderService";
 import { generateFakeEvent } from "../../helpers/fakers";
 import { seedNewUser } from "../../helpers/test";
-import type { Event, Order } from ".prisma/client";
+import type { Order } from ".prisma/client";
 
 let prisma = getPrisma();
 let userService = new UserService(prisma);
-let orderService = new OrderService(prisma);
+let orderService = new OrderService(prisma, {} as any);
 let user: any;
 beforeAll(async () => {
     await prisma.$connect();
@@ -23,56 +23,53 @@ test('should create new Order', async () => {
     let eventService: EventService = new EventService(prisma);
     let fakeEvent = generateFakeEvent(user);
     let createdEvent = await eventService.create(fakeEvent);
-    let result = await orderService.createOrder(
+    let [affected, order] = await orderService.createOrder(
         createdEvent.id,
         user.id
-    ) as [Event, Order];
-    expect(result).toBeTruthy();
-    expect(result[0].takenSeats).toBe(1);
-    expect(result[1].status).toBe("PENDING");
+    ) as [number, Order];
+    expect(affected).toBe(1);
+    expect(order.status).toBe("PENDING");
 });
 
 test('should create new confirmed Order', async () => {
     let eventService: EventService = new EventService(prisma);
     let fakeEvent = generateFakeEvent(user);
     let createdEvent = await eventService.create(fakeEvent);
-    let result = await orderService.createOrder(
+    let [affected, order] = await orderService.createOrder(
         createdEvent.id,
         user.id,
         "CONFIRMED"
-    ) as [Event, Order];
-    expect(result).toBeTruthy();
-    expect(result[0].takenSeats).toBe(1);
-    expect(result[1].status).toBe("CONFIRMED");
+    ) as [number, Order];
+    expect(affected).toEqual(1);
+    expect(order.status).toBe("CONFIRMED");
 });
 
 test('should confirm a current Order', async () => {
     let eventService: EventService = new EventService(prisma);
     let fakeEvent = generateFakeEvent(user);
     let createdEvent = await eventService.create(fakeEvent);
-    let result = await orderService.createOrder(
+    let [affected, order] = await orderService.createOrder(
         createdEvent.id,
         user.id,
-    ) as [Event, Order];
-    expect(result[1].status).toBe("PENDING");
-    await orderService.confirmOrder(result[1].id);
-    let order = await prisma.order.findUnique({
+    ) as [number, Order];
+    expect(order.status).toBe("PENDING");
+    await orderService.confirmOrder(order.id);
+    let updatedOrder = await prisma.order.findUnique({
         where: {
-            id: result[1].id
+            id: order.id
         }
     });
-    expect(order?.status).toBe("CONFIRMED");
+    expect(updatedOrder?.status).toBe("CONFIRMED");
 });
 
 test('should cancel a current Order', async () => {
     let eventService: EventService = new EventService(prisma);
     let fakeEvent = generateFakeEvent(user);
     let createdEvent = await eventService.create(fakeEvent);
-    let [event, order] = await orderService.createOrder(
+    let [affected, order] = await orderService.createOrder(
         createdEvent.id,
         user.id,
-    ) as [Event, Order];
-    expect(order).toBeTruthy();
+    ) as [number, Order];
     await orderService.cancelOrder(order as unknown as Order);
     let deletedOrder = await prisma.order.findUnique({
         where: {
@@ -80,38 +77,44 @@ test('should cancel a current Order', async () => {
                 order.id
         }
     });
+    expect(affected).toEqual(1);
     expect(deletedOrder).toBeNull();
-    let updatedEvent = await prisma.event.findUnique({
-        where: {
-            id:
-                event.id
-        }
-    });
-    expect(updatedEvent?.seats).toBe(createdEvent.seats);
 });
 
 test('should Fail create a new Order with no available seats', async () => {
     let fakeEvent = generateFakeEvent(user);
     fakeEvent.takenSeats = fakeEvent.seats;
     let createdEvent = await prisma.event.create({ data: fakeEvent });
-    let result = await orderService.createOrder(
-        createdEvent.id,
-        user.id
-    );
-    expect(result).toBeFalsy();
+    expect.assertions(2);
+    try {
+        await orderService.createOrder(
+            createdEvent.id,
+            user.id
+        ) as [number, Order];
+    } catch (error) {
+        console.log(error);
+        let event = await prisma.event.findUnique({
+            where: {
+                id:
+                    createdEvent.id
+            }
+        });
+        expect((error as Error).message).toBe('Cannot create Order, no more available Seats');
+        expect(createdEvent.takenSeats).toEqual(event?.takenSeats);
+    }
 });
 
-test('should Fail create a new Order with if Sale end date passed', async () => {
+test('should Fail create a new Order if Sale end date passed', async () => {
     let fakeEvent = generateFakeEvent(user);
     let oldDate = new Date();
     oldDate.setDate(oldDate.getDate() - 1);
     fakeEvent.endSale = oldDate;
     let createdEvent = await prisma.event.create({ data: fakeEvent });
-    let result = await orderService.createOrder(
+    let [affected] = await orderService.createOrder(
         createdEvent.id,
         user.id
-    );
-    expect(result).toBeFalsy();
+    ) as [number, null];
+    expect(affected).toEqual(0);
 });
 
 test('should fail create new Order for already purchased event', async () => {
@@ -122,9 +125,72 @@ test('should fail create new Order for already purchased event', async () => {
         createdEvent.id,
         user.id
     );
-    let result = await orderService.createOrder(
+    let [affected,order] = await orderService.createOrder(
         createdEvent.id,
         user.id
     );
-    expect(result).toBeFalsy();
+    expect(affected).toBe(0);
+    expect(order).toBeNull();
+});
+
+test('should complete order when payment sucess', async () => {
+    let eventService: EventService = new EventService(prisma);
+    let getPaymentEventMock = jest.fn();
+    let paymentServiceMock = {
+        getPaymentEvent: getPaymentEventMock
+    }
+    let orderService: OrderService = new OrderService(prisma,
+        paymentServiceMock as any);
+    let fakeEvent = generateFakeEvent(user);
+    let createdEvent = await eventService.create(fakeEvent);
+    let [event, order] = await orderService.createOrder(
+        createdEvent.id,
+        user.id
+    ) as [number, Order];
+    getPaymentEventMock.mockImplementation(() => {
+        return { type: "payment_intent.succeeded", metadata: { orderId: order.id } }
+    });
+
+    let completedOrder = await orderService.completePaidOrder({
+        signature: "sig", eventBody: {}
+    });
+    expect(completedOrder?.status).toBe("CONFIRMED");
+});
+
+async function testEventType(eventType:string) {
+    let eventService: EventService = new EventService(prisma);
+    let getPaymentEventMock = jest.fn();
+    let paymentServiceMock = {
+        getPaymentEvent: getPaymentEventMock
+    }
+    let orderService: OrderService = new OrderService(prisma,
+        paymentServiceMock as any);
+    let fakeEvent = generateFakeEvent(user);
+    let createdEvent = await eventService.create(fakeEvent);
+    let [, order] = await orderService.createOrder(
+        createdEvent.id,
+        user.id
+    ) as [number, Order];
+    getPaymentEventMock.mockImplementation(() => {
+        return { type: eventType, metadata: { orderId: order.id } }
+    });
+
+    await orderService.completePaidOrder({
+        signature: "sig", eventBody: {}
+    });
+    let deletedOrder = await prisma.order.findUnique({
+        where: {
+            id:
+                order.id
+        }
+    });
+    expect(deletedOrder).toBeNull();
+}
+
+test('should cancel order when payment failed', async () => {
+    await testEventType("payment_intent.failed");
+});
+
+test('should cancel order when payment canceled', async () => {
+    await testEventType("payment_intent.canceled");
 });

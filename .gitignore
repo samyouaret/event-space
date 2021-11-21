@@ -6,6 +6,7 @@ public/storage/
 tmp/
 temp/
 src/tests/*.rest
+src/database/prisma/_*
 /build
 src/resources
 yarn-error.log

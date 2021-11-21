@@ -5,7 +5,7 @@ import TokenVerifyService from '../../app/services/TokenVerifyService';
 import faker from 'faker';
 import { Prisma } from '.prisma/client';
 import MailService, { MailSender } from '../../app/services/MailService';
-import { createFakeMailer, createMailer } from '../../factories/MailerFactory';
+import { createFakeMailer } from '../../factories/MailerFactory';
 
 let prisma = getPrisma();
 let userService = new UserService(prisma);

@@ -11,10 +11,6 @@ afterAll(async () => {
     await prisma.$disconnect();
 });
 
-afterAll(async () => {
-    await prisma.$disconnect();
-});
-
 describe('Testing TokenVerifyService', () => {
 
     it('should generate new token', async () => {

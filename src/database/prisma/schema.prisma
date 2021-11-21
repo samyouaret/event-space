@@ -5,31 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-}
-
-model Event {
-  id          String    @id @default(uuid())
-  title       String    @db.Text
-  organizer   String    @db.Text
-  location    String    @db.Text
-  type        String    @db.Text
-  createdAt   DateTime  @default(now()) @db.Timestamp(0)
-  updatedAt   DateTime? @default(now()) @db.Timestamp(0)
-  startDate   DateTime  @default(now()) @db.Timestamp(0)
-  endDate     DateTime  @default(now()) @db.Timestamp(0)
-  timezone    String    @db.Text
-  summary     String?   @db.Text
-  description String?   @db.Text
-  image       String?   @db.Text
-  userId      String
-  User        User      @relation(fields: [userId], references: [id])
-
-  price      Float     @default(0)
-  seats      Int
-  takenSeats Int       @default(0)
-  startSale  DateTime? @db.Timestamp(0)
-  endSale    DateTime? @db.Timestamp(0)
-  orders     Order[]
+  previewFeatures = ["interactiveTransactions"]
 }
 
 model User {
@@ -72,13 +48,39 @@ model ResetPassword {
   @@index([hash], name: "resetPassword_hash_index")
 }
 
+model Event {
+  id          String    @id @default(uuid())
+  title       String    @db.Text
+  organizer   String    @db.Text
+  location    String    @db.Text
+  type        String    @db.Text
+  createdAt   DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime? @default(now()) @db.Timestamp(0)
+  startDate   DateTime  @default(now()) @db.Timestamp(0)
+  endDate     DateTime  @default(now()) @db.Timestamp(0)
+  timezone    String    @db.Text
+  summary     String?   @db.Text
+  description String?   @db.Text
+  image       String?   @db.Text
+  userId      String
+  User        User      @relation(fields: [userId], references: [id])
+
+  price      Float       @default(0)
+  seats      Int
+  takenSeats Int         @default(0)
+  startSale  DateTime?   @db.Timestamp(0)
+  endSale    DateTime?   @db.Timestamp(0)
+  orders     Order[]
+}
+
 model Order {
-  id      String      @id @default(uuid())
-  userId  String
-  User    User        @relation(fields: [userId], references: [id])
-  eventId String
-  status  OrderStatus @default(PENDING)
-  Event   Event       @relation(fields: [eventId], references: [id])
+  id        String      @id @default(uuid())
+  userId    String
+  User      User        @relation(fields: [userId], references: [id])
+  eventId   String
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now()) @db.Timestamp(0)
+  Event     Event       @relation(fields: [eventId], references: [id])
 }
 
 enum OrderStatus {
