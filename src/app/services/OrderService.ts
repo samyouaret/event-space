@@ -1,11 +1,13 @@
-import type { Order, OrderStatus, PrismaClient } from ".prisma/client";
+import type { Order, Event, PrismaClient, Prisma } from ".prisma/client";
 import type PaymentService from "./PaymentService";
 
 export class OrderService {
     constructor(private readonly prisma: PrismaClient,
         private readonly paymentService: PaymentService) { }
 
-    async createOrder(eventId: string, userId: string, status?: OrderStatus) {
+    async createOrder(orderData: Prisma.OrderUncheckedCreateInput) {
+        let eventId = orderData.eventId;
+        let userId = orderData.userId;
         let canFulfillOrder = await this.canFulfillOrder(eventId, userId);
         if (!canFulfillOrder) {
             return [0, null];
@@ -19,12 +21,11 @@ export class OrderService {
                 throw new Error("Cannot create Order, no more available Seats");
             }
             let order = await this.prisma.order.create({
-                data: {
-                    eventId,
-                    userId,
-                    status: status,
-                }
+                data: orderData
             });
+            if (!order) {
+                throw new Error("Cannot create Order, something wrong");
+            }
             return [affected, order];
         }
         );
@@ -39,6 +40,18 @@ export class OrderService {
                 status: "CONFIRMED"
             }
         });
+    }
+
+    async needPayment(eventId: string) {
+        let event = await this.prisma.event.findUnique({
+            where: {
+                id: eventId,
+            },
+        });
+        if (event && event.price > 0) {
+            return event;
+        }
+        return false;
     }
 
     async cancelOrder(order: Order) {
@@ -74,18 +87,25 @@ export class OrderService {
 
     async completePaidOrder(data: { signature: string, eventBody: any }) {
         const event = this.paymentService.getPaymentEvent(data);
-        // const paymentIntent = event.data.object;
-        let orderId = (event as any).metadata.orderId;
+        let object = event.data.object as any;
         switch (event.type) {
-            case 'payment_intent.succeeded':
-                return this.confirmOrder(orderId);
+            case 'payment_intent.succeeded': {
+                console.log('succeeded');
+                const paymentIntent = object.payment_intent || object.id || '';
+                let order = await this.prisma.order.findFirst({
+                    where: { paymentIntent }
+                });
+                return this.confirmOrder(order?.id || "");
+            }
             case 'payment_intent.canceled':
             case 'payment_intent.failed': {
-                let order = await this.prisma.order.findUnique({
-                    where: { id: orderId }
+                console.log('canceled');
+                
+                const paymentIntent = object.payment_intent || object.id || '';
+                let order = await this.prisma.order.findFirst({
+                    where: { paymentIntent }
                 });
-                await this.cancelOrder(order as Order);
-                return order;
+                return this.cancelOrder(order as Order);
             }
             default:
                 console.warn(`Event should be logged ${event.type}`);
@@ -93,6 +113,40 @@ export class OrderService {
 
     }
 
+    async createPaidOrder(event: Event, options: {
+        userId: string,
+        successUrl: string,
+        cancelUrl: string,
+        quantity: number,
+    }) {
+        let session = await this.paymentService.createSession(
+            {
+                successUrl: options.successUrl,
+                cancelUrl: options.cancelUrl,
+                quantity: options.quantity,
+                metadata: {},
+                product: {
+                    description: event.description as string,
+                    images: ["my_image"],
+                    price: event.price,
+                    title: event.title
+                }
+            }
+        );
+        if (!session) {
+            throw new Error("Cannot create Payment Session");
+        }
+        let paymentIntent = session.payment_intent?.toString() || 'not set';
+        let [, order] = await this.createOrder({
+            eventId: event.id,
+            userId: options.userId,
+            paymentIntent,
+        });
+        if (!order) {
+            throw new Error("Cannot create order");
+        }
+        return [session, order as Order];
+    }
 }
 
 export default OrderService;

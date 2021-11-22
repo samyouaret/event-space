@@ -18,14 +18,18 @@ export class PaymentService {
         },
         metadata: Stripe.MetadataParam | undefined,
     }) {
+        let date = new Date();
+        date.setMinutes(date.getMinutes() + 60);
         const session = await this.stripe.checkout.sessions.create({
             metadata: options.metadata,
+            expires_at: Math.floor(date.getTime() / 1000),
             line_items: [
                 {
                     price_data: {
                         unit_amount: options.product.price * 100,
                         currency: 'usd',
                         product_data: {
+                            metadata: options.metadata,
                             name: options.product.title,
                             description: options.product.description || undefined,
                             images: options.product.images

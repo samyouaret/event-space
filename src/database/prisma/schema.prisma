@@ -4,7 +4,7 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["interactiveTransactions"]
 }
 
@@ -65,22 +65,23 @@ model Event {
   userId      String
   User        User      @relation(fields: [userId], references: [id])
 
-  price      Float       @default(0)
+  price      Float     @default(0)
   seats      Int
-  takenSeats Int         @default(0)
-  startSale  DateTime?   @db.Timestamp(0)
-  endSale    DateTime?   @db.Timestamp(0)
+  takenSeats Int       @default(0)
+  startSale  DateTime? @db.Timestamp(0)
+  endSale    DateTime? @db.Timestamp(0)
   orders     Order[]
 }
 
 model Order {
-  id        String      @id @default(uuid())
-  userId    String
-  User      User        @relation(fields: [userId], references: [id])
-  eventId   String
-  status    OrderStatus @default(PENDING)
-  createdAt DateTime    @default(now()) @db.Timestamp(0)
-  Event     Event       @relation(fields: [eventId], references: [id])
+  id            String      @id @default(uuid())
+  userId        String
+  User          User        @relation(fields: [userId], references: [id])
+  eventId       String
+  paymentIntent String
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now()) @db.Timestamp(0)
+  Event         Event       @relation(fields: [eventId], references: [id])
 }
 
 enum OrderStatus {
